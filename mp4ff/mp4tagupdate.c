@@ -83,34 +83,34 @@ unsigned membuffer_write(membuffer * buf,const void * ptr,unsigned bytes)
 #define membuffer_write_data membuffer_write
 
 /*{{{*/
-unsigned membuffer_write_int32(membuffer * buf,uint32_t data)
+unsigned membuffer_write_int32 (membuffer * buf,uint32_t data)
 {
   uint8_t temp[4] = {(uint8_t)(data>>24),(uint8_t)(data>>16),(uint8_t)(data>>8),(uint8_t)data};
   return membuffer_write_data(buf,temp,4);
 }
 /*}}}*/
 /*{{{*/
-unsigned membuffer_write_int24(membuffer * buf,uint32_t data)
+unsigned membuffer_write_int24 (membuffer * buf,uint32_t data)
 {
   uint8_t temp[3] = {(uint8_t)(data>>16),(uint8_t)(data>>8),(uint8_t)data};
   return membuffer_write_data(buf,temp,3);
 }
 /*}}}*/
 /*{{{*/
-unsigned membuffer_write_int16(membuffer * buf,uint16_t data)
+unsigned membuffer_write_int16 (membuffer * buf,uint16_t data)
 {
   uint8_t temp[2] = {(uint8_t)(data>>8),(uint8_t)data};
   return membuffer_write_data(buf,temp,2);
 }
 /*}}}*/
 /*{{{*/
-unsigned membuffer_write_atom_name(membuffer * buf,const char * data)
+unsigned membuffer_write_atom_name( membuffer * buf,const char * data)
 {
   return membuffer_write_data(buf,data,4)==4 ? 1 : 0;
 }
 /*}}}*/
 /*{{{*/
-void membuffer_write_atom(membuffer * buf,const char * name,unsigned size,const void * data)
+void membuffer_write_atom (membuffer * buf,const char * name,unsigned size,const void * data)
 {
   membuffer_write_int32(buf,size + 8);
   membuffer_write_atom_name(buf,name);
@@ -118,40 +118,40 @@ void membuffer_write_atom(membuffer * buf,const char * name,unsigned size,const 
 }
 /*}}}*/
 /*{{{*/
-unsigned membuffer_write_string(membuffer * buf,const char * data)
+unsigned membuffer_write_string (membuffer * buf,const char * data)
 {
   return membuffer_write_data(buf,data,strlen(data));
 }
 /*}}}*/
 /*{{{*/
-unsigned membuffer_write_int8(membuffer * buf,uint8_t data)
+unsigned membuffer_write_int8 (membuffer * buf,uint8_t data)
 {
   return membuffer_write_data(buf,&data,1);
 }
 /*}}}*/
 
 /*{{{*/
-void * membuffer_get_ptr(const membuffer * buf)
+void * membuffer_get_ptr (const membuffer * buf)
 {
   return buf->data;
 }
 /*}}}*/
 /*{{{*/
-unsigned membuffer_get_size(const membuffer * buf)
+unsigned membuffer_get_size (const membuffer * buf)
 {
   return buf->written;
 }
 /*}}}*/
 
 /*{{{*/
-unsigned membuffer_error(const membuffer * buf)
+unsigned membuffer_error (const membuffer * buf)
 {
   return buf->error;
 }
 /*}}}*/
 void membuffer_set_error(membuffer * buf) {buf->error = 1;}
 /*{{{*/
-unsigned membuffer_transfer_from_file(membuffer * buf,mp4ff_t * src,unsigned bytes)
+unsigned membuffer_transfer_from_file (membuffer * buf,mp4ff_t * src,unsigned bytes)
 {
   unsigned oldsize;
   void * bufptr;
@@ -238,7 +238,7 @@ static stdmeta_entry stdmetas[] =
 };
 /*}}}*/
 /*{{{*/
-static const char* find_standard_meta(const char * name) //returns atom name if found, 0 if not
+static const char* find_standard_meta (const char * name) //returns atom name if found, 0 if not
 {
   unsigned n;
   for(n=0;n<sizeof(stdmetas)/sizeof(stdmetas[0]);n++)
@@ -249,7 +249,7 @@ static const char* find_standard_meta(const char * name) //returns atom name if 
 }
 /*}}}*/
 /*{{{*/
-static void membuffer_write_track_tag(membuffer * buf,const char * name,uint32_t index,uint32_t total)
+static void membuffer_write_track_tag (membuffer * buf,const char * name,uint32_t index,uint32_t total)
 {
   membuffer_write_int32(buf,8 /*atom header*/ + 8 /*data atom header*/ + 8 /*flags + reserved*/ + 8 /*actual data*/ );
   membuffer_write_atom_name(buf,name);
@@ -264,7 +264,7 @@ static void membuffer_write_track_tag(membuffer * buf,const char * name,uint32_t
 }
 /*}}}*/
 /*{{{*/
-static void membuffer_write_int16_tag(membuffer * buf,const char * name,uint16_t value)
+static void membuffer_write_int16_tag (membuffer * buf,const char * name,uint16_t value)
 {
   membuffer_write_int32(buf,8 /*atom header*/ + 8 /*data atom header*/ + 8 /*flags + reserved*/ + 2 /*actual data*/ );
   membuffer_write_atom_name(buf,name);
@@ -276,7 +276,7 @@ static void membuffer_write_int16_tag(membuffer * buf,const char * name,uint16_t
 }
 /*}}}*/
 /*{{{*/
-static void membuffer_write_std_tag(membuffer * buf,const char * name,const char * value)
+static void membuffer_write_std_tag (membuffer * buf,const char * name,const char * value)
 {
   /* added by AJS */
   uint32_t flags = 1;
@@ -297,7 +297,7 @@ static void membuffer_write_std_tag(membuffer * buf,const char * name,const char
 }
 /*}}}*/
 /*{{{*/
-static void membuffer_write_custom_tag(membuffer * buf,const char * name,const char * value)
+static void membuffer_write_custom_tag (membuffer * buf,const char * name,const char * value)
 {
   membuffer_write_int32(buf,8 /*atom header*/ + 0x1C /*weirdo itunes atom*/ + 12 /*name atom header*/ + strlen(name) + 16 /*data atom header + flags*/ + strlen(value) );
   membuffer_write_atom_name(buf,"----");
@@ -318,13 +318,13 @@ static void membuffer_write_custom_tag(membuffer * buf,const char * name,const c
 }
 /*}}}*/
 /*{{{*/
-static uint32_t myatoi(const char * param)
+static uint32_t myatoi (const char * param)
 {
   return param ? atoi(param) : 0;
 }
 /*}}}*/
 /*{{{*/
-static uint32_t create_ilst(const mp4ff_metadata_t * data,void ** out_buffer,uint32_t * out_size)
+static uint32_t create_ilst (const mp4ff_metadata_t * data,void ** out_buffer,uint32_t * out_size)
 {
   membuffer * buf = membuffer_create();
   unsigned metaptr;
@@ -419,7 +419,7 @@ static uint32_t create_ilst(const mp4ff_metadata_t * data,void ** out_buffer,uin
 /*}}}*/
 
 /*{{{*/
-static uint32_t find_atom(mp4ff_t * f,uint64_t base,uint32_t size,const char * name)
+static uint32_t find_atom (mp4ff_t * f,uint64_t base,uint32_t size,const char * name)
 {
   uint32_t remaining = size;
   uint64_t atom_offset = base;
@@ -448,7 +448,7 @@ static uint32_t find_atom(mp4ff_t * f,uint64_t base,uint32_t size,const char * n
 }
 /*}}}*/
 /*{{{*/
-static uint32_t find_atom_v2(mp4ff_t * f,uint64_t base,uint32_t size,const char * name,uint32_t extraheaders,const char * name_inside)
+static uint32_t find_atom_v2 (mp4ff_t * f,uint64_t base,uint32_t size,const char * name,uint32_t extraheaders,const char * name_inside)
 {
   uint64_t first_base = (uint64_t)(-1);
   while(find_atom(f,base,size,name))//try to find atom <name> with atom <name_inside> in it
@@ -480,7 +480,7 @@ static uint32_t find_atom_v2(mp4ff_t * f,uint64_t base,uint32_t size,const char 
 /*}}}*/
 
 /*{{{*/
-static uint32_t create_meta(const mp4ff_metadata_t * data,void ** out_buffer,uint32_t * out_size)
+static uint32_t create_meta (const mp4ff_metadata_t * data,void ** out_buffer,uint32_t * out_size)
 {
   membuffer * buf;
   uint32_t ilst_size;
@@ -501,7 +501,7 @@ static uint32_t create_meta(const mp4ff_metadata_t * data,void ** out_buffer,uin
 }
 /*}}}*/
 /*{{{*/
-static uint32_t create_udta(const mp4ff_metadata_t * data,void ** out_buffer,uint32_t * out_size)
+static uint32_t create_udta (const mp4ff_metadata_t * data,void ** out_buffer,uint32_t * out_size)
 {
   membuffer * buf;
   uint32_t meta_size;
@@ -522,7 +522,7 @@ static uint32_t create_udta(const mp4ff_metadata_t * data,void ** out_buffer,uin
 }
 /*}}}*/
 /*{{{*/
-static uint32_t modify_moov(mp4ff_t * f,const mp4ff_metadata_t * data,void ** out_buffer,uint32_t * out_size)
+static uint32_t modify_moov (mp4ff_t * f,const mp4ff_metadata_t * data,void ** out_buffer,uint32_t * out_size)
 {
   uint64_t total_base = f->moov_offset + 8;
   uint32_t total_size = (uint32_t)(f->moov_size - 8);
@@ -629,7 +629,7 @@ static uint32_t modify_moov(mp4ff_t * f,const mp4ff_metadata_t * data,void ** ou
 /*}}}*/
 
 /*{{{*/
-int32_t mp4ff_meta_update(mp4ff_callback_t *f,const mp4ff_metadata_t * data)
+int32_t mp4ff_meta_update (mp4ff_callback_t *f,const mp4ff_metadata_t * data)
 {
   void * new_moov_data;
   uint32_t new_moov_size;

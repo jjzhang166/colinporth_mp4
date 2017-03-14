@@ -1,6 +1,8 @@
 // mp4ffapp.cpp
 //{{{  includes
 #define _CRT_SECURE_NO_WARNINGS
+#include <windows.h> // Sleep
+
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdarg.h>
@@ -11,13 +13,13 @@
 //}}}
 
 //{{{
-uint32_t readCallback (void* user_data, void* buffer, uint32_t length) {
-  return fread (buffer, 1, length, (FILE*)user_data);
+uint32_t seekCallback (void* user_data, uint64_t position) {
+  return (uint32_t)fseek ((FILE*)user_data, position, SEEK_SET);
   }
 //}}}
 //{{{
-uint32_t seekCallback (void* user_data, uint64_t position) {
-  return (uint32_t)fseek ((FILE*)user_data, position, SEEK_SET);
+uint32_t readCallback (void* user_data, void* buffer, uint32_t length) {
+  return fread (buffer, 1, length, (FILE*)user_data);
   }
 //}}}
 
@@ -25,9 +27,10 @@ uint32_t seekCallback (void* user_data, uint64_t position) {
 int GetAACTrack (mp4ff_t* mp4ff) {
 
   // find AAC track
-  int i, rc;
   int numTracks = mp4ff_total_tracks (mp4ff);
-  for (i = 0; i < numTracks; i++) {
+  printf ("numTracks:%d\n", numTracks);
+
+  for (int i = 0; i < numTracks; i++) {
     unsigned char* buff = NULL;
     unsigned int buff_size = 0;
     mp4ff_get_decoder_config (mp4ff, i, &buff, &buff_size);
@@ -35,7 +38,6 @@ int GetAACTrack (mp4ff_t* mp4ff) {
     return i;
     }
 
-  /* can't decode this */
   return -1;
   }
 //}}}
@@ -69,8 +71,8 @@ int main (int argc, char** argv) {
     //}}}
   //{{{  set callbacks
   auto mp4cb = (mp4ff_callback_t*)malloc (sizeof (mp4ff_callback_t));
-  mp4cb->read = readCallback;
   mp4cb->seek = seekCallback;
+  mp4cb->read = readCallback;
   mp4cb->user_data = mp4File;
   //}}}
 
@@ -116,6 +118,6 @@ int main (int argc, char** argv) {
 
   free (mp4cb);
   fclose (mp4File);
-
+  Sleep (10000);
   return 0;
   }
