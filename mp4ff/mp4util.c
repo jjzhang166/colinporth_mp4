@@ -34,21 +34,19 @@ int64_t mp4ff_position (const mp4ff_t *f)
 /*}}}*/
 
 /*{{{*/
-uint64_t mp4ff_read_int64 (mp4ff_t *f)
-{
-    uint8_t data[8];
-    uint64_t result = 0;
-    int8_t i;
+uint64_t mp4ff_read_int64 (mp4ff_t *f) {
 
-    mp4ff_read_data(f, data, 8);
+  uint8_t data[8];
+  uint64_t result = 0;
+  int8_t i;
 
-    for (i = 0; i < 8; i++)
-    {
-        result |= ((uint64_t)data[i]) << ((7 - i) * 8);
-    }
+  mp4ff_read_data(f, data, 8);
 
-    return result;
-}
+  for (i = 0; i < 8; i++)
+    result |= ((uint64_t)data[i]) << ((7 - i) * 8);
+
+  return result;
+  }
 /*}}}*/
 /*{{{*/
 uint32_t mp4ff_read_int32 (mp4ff_t *f)
