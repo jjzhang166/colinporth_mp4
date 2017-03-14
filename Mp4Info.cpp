@@ -1432,6 +1432,7 @@ int main (int argc, char** argv)
     if (argc < 2) {
         PrintUsageAndExit();
     }
+
     Options.format = TEXT_FORMAT;
     const char* filename         = NULL;
     bool        verbose          = false;
@@ -1483,9 +1484,7 @@ int main (int argc, char** argv)
     }
 
     AP4_ByteStream* input = NULL;
-    AP4_Result result = AP4_FileByteStream::Create(filename,
-                                                   AP4_FileByteStream::STREAM_MODE_READ,
-                                                   input);
+    AP4_Result result = AP4_FileByteStream::Create(filename, AP4_FileByteStream::STREAM_MODE_READ, input);
     if (AP4_FAILED(result)) {
         fprintf(stderr, "ERROR: cannot open input file %s (%d)\n", filename, result);
         return 1;
