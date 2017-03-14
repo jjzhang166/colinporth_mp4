@@ -345,7 +345,7 @@ static void ShowMpegAudioSampleDescription(AP4_MpegAudioSampleDescription& mpeg_
 //}}}
 
 //{{{
-static void ShowSampleDescription_Text(AP4_SampleDescription& description, bool verbose)
+static void ShowSampleDescription_Text (AP4_SampleDescription& description, bool verbose)
 {
     AP4_SampleDescription* desc = &description;
     if (desc->GetType() == AP4_SampleDescription::TYPE_PROTECTED) {
@@ -533,7 +533,7 @@ static void ShowSampleDescription_Text(AP4_SampleDescription& description, bool 
 }
 //}}}
 //{{{
-static void ShowSampleDescription_Json(AP4_SampleDescription& description, bool verbose)
+static void ShowSampleDescription_Json (AP4_SampleDescription& description, bool verbose)
 {
     printf("{\n");
     AP4_SampleDescription* desc = &description;
@@ -747,7 +747,7 @@ static void ShowSampleDescription_Json(AP4_SampleDescription& description, bool 
 }
 //}}}
 //{{{
-static void ShowSampleDescription(AP4_SampleDescription& description, bool verbose)
+static void ShowSampleDescription (AP4_SampleDescription& description, bool verbose)
 {
     switch (Options.format) {
         case TEXT_FORMAT: ShowSampleDescription_Text(description, verbose); break;
