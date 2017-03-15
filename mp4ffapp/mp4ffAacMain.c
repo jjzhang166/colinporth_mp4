@@ -592,8 +592,7 @@ static int decodeAACfile(char *aacfile, char *sndfile, char *adts_fn, int to_std
 
     do
     {
-        sample_buffer = NeAACDecDecode(hDecoder, &frameInfo,
-            b.buffer, b.bytes_into_buffer);
+        sample_buffer = NeAACDecDecode (hDecoder, &frameInfo, b.buffer, b.bytes_into_buffer);
 
         if (adts_out == 1)
         {

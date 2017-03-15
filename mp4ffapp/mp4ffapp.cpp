@@ -42,6 +42,65 @@ int GetAACTrack (mp4ff_t* mp4ff) {
   }
 //}}}
 
+int adts_sample_rates[] = {96000,88200,64000,48000,44100,32000,24000,22050,16000,12000,11025,8000,7350,0,0,0};
+//{{{
+int findAdtsSRIndex (int sr) {
+
+  int i;
+  for (i = 0; i < 16; i++)
+    if (sr == adts_sample_rates[i])
+      return i;
+  return 16 - 1;
+  }
+//}}}
+//{{{
+unsigned char* makeAdtsHeader (int framesize) {
+
+  int object_type = 2;
+  int samplerate = 44100;
+  int header_type = 0;
+  int sbr = 0;
+  int channels = 2;
+
+
+  int profile = (object_type - 1) & 0x3;
+  int sr_index = findAdtsSRIndex(samplerate);
+
+  int dataSize = 7;
+  unsigned char* data = (unsigned char*)malloc (dataSize * sizeof(unsigned char));
+  memset (data, 0, dataSize * sizeof(unsigned char));
+
+  data[0] += 0xFF;                      /* 8b: syncword */
+
+  data[1] += 0xF0;                      /* 4b: syncword */
+                                        /* 1b: mpeg id = 0 */
+                                        /* 2b: layer = 0 */
+  data[1] += 1;                         /* 1b: protection absent */
+
+  data[2] += ((profile << 6) & 0xC0);   /* 2b: profile */
+  data[2] += ((sr_index << 2) & 0x3C);  /* 4b: sampling_frequency_index */
+                                        /* 1b: private = 0 */
+  data[2] += ((channels >> 2) & 0x1);   /* 1b: channel_configuration */
+
+  data[3] += ((channels << 6) & 0xC0);  /* 2b: channel_configuration */
+                                        /* 1b: original */
+                                        /* 1b: home */
+                                        /* 1b: copyright_id */
+                                        /* 1b: copyright_id_start */
+  data[3] += ((framesize >> 11) & 0x3); /* 2b: aac_frame_length */
+
+  data[4] += ((framesize >> 3) & 0xFF); /* 8b: aac_frame_length */
+
+  data[5] += ((framesize << 5) & 0xE0); /* 3b: aac_frame_length */
+  data[5] += ((0x7FF >> 6) & 0x1F);     /* 5b: adts_buffer_fullness */
+
+  data[6] += ((0x7FF << 2) & 0x3F);     /* 6b: adts_buffer_fullness */
+                                        /* 2b: num_raw_data_blocks */
+  return data;
+  }
+//}}}
+
+//{{{
 int main (int argc, char** argv) {
   //{{{  parse args
   bool mLogInfo = false;
@@ -92,8 +151,8 @@ int main (int argc, char** argv) {
   mp4ff_get_decoder_config (mp4ff, track, &buffer, &buffer_size);
 
   auto timescale = mp4ff_time_scale (mp4ff, track);
-  long samples = mp4ff_num_samples (mp4ff, track);
-  printf ("timescale:%d, samples:%d\n", timescale, samples);
+  long numSamples = mp4ff_num_samples (mp4ff, track);
+  printf ("timescale:%d, samples:%d\n", timescale, numSamples);
 
   int j = mp4ff_meta_get_num_items (mp4ff);
   for (int k = 0; k < j; k++) {
@@ -110,14 +169,26 @@ int main (int argc, char** argv) {
       }
     }
 
-  long sampleId = 0;
-  auto dur = mp4ff_get_sample_duration (mp4ff, track, sampleId);
-  auto rc = mp4ff_read_sample (mp4ff, track, sampleId, &buffer,  &buffer_size);
+  auto adtsFile = fopen ("C:/Users/colin/Desktop/nnnn.adts", "wb");
+  for (long sampleId = 0; sampleId < numSamples; sampleId++) {
+    auto dur = mp4ff_get_sample_duration (mp4ff, track, sampleId);
+    auto rc = mp4ff_read_sample (mp4ff, track, sampleId, &buffer,  &buffer_size);
+    printf ("reading id:%d dur:%d buf:%p bufSize:%d        \r", sampleId, dur, buffer, buffer_size);
 
+    auto adtsData = makeAdtsHeader (buffer_size);
+    fwrite (adtsData, 1, 7, adtsFile);
+    fwrite (buffer, 1, buffer_size, adtsFile);
+    free (buffer);
+    }
+
+  fclose (adtsFile);
   mp4ff_close (mp4ff);
 
   free (mp4cb);
   fclose (mp4File);
+
+  printf("\ndone, sleep 10s\n");
   Sleep (10000);
   return 0;
   }
+//}}}
