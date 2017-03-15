@@ -10,9 +10,9 @@
 /*}}}*/
 
 /*{{{*/
-static int32_t mp4ff_tag_add_field (mp4ff_metadata_t *tags, const char *item, const char *value)
+static int32_t mp4ff_tag_add_field (mp4ff_metadata_t* tags, const char* item, const char* value)
 {
-    void *backup = (void *)tags->tags;
+    void* backup = (void *)tags->tags;
 
     if (!item || (item && !*item) || !value) return 0;
 
@@ -40,7 +40,7 @@ static int32_t mp4ff_tag_add_field (mp4ff_metadata_t *tags, const char *item, co
 }
 /*}}}*/
 /*{{{*/
-static int32_t mp4ff_tag_set_field (mp4ff_metadata_t *tags, const char *item, const char *value)
+static int32_t mp4ff_tag_set_field (mp4ff_metadata_t* tags, const char* item, const char* value)
 {
     unsigned int i;
 
@@ -61,7 +61,7 @@ static int32_t mp4ff_tag_set_field (mp4ff_metadata_t *tags, const char *item, co
 /*}}}*/
 
 /*{{{*/
-int32_t mp4ff_tag_delete (mp4ff_metadata_t *tags)
+int32_t mp4ff_tag_delete (mp4ff_metadata_t* tags)
 {
     uint32_t i;
 
@@ -112,7 +112,7 @@ static const char* ID3v1GenreList[] = {
 /*}}}*/
 
 /*{{{*/
-uint32_t mp4ff_meta_genre_to_index (const char * genrestr)
+uint32_t mp4ff_meta_genre_to_index (const char*  genrestr)
 {
   unsigned n;
   for(n=0;n<sizeof(ID3v1GenreList)/sizeof(ID3v1GenreList[0]);n++)
@@ -123,7 +123,7 @@ uint32_t mp4ff_meta_genre_to_index (const char * genrestr)
 }
 /*}}}*/
 /*{{{*/
-const char * mp4ff_meta_index_to_genre (uint32_t idx)
+const char*  mp4ff_meta_index_to_genre (uint32_t idx)
 {
   if (idx>0 && idx<=sizeof(ID3v1GenreList)/sizeof(ID3v1GenreList[0]))
   {
@@ -147,9 +147,9 @@ static int32_t TrackToString (char** str, const uint16_t track, const uint16_t t
 /*}}}*/
 
 /*{{{*/
-static int32_t mp4ff_set_metadata_name (mp4ff_t *f, const uint8_t atom_type, char **name)
+static int32_t mp4ff_set_metadata_name (mp4ff_t* f, const uint8_t atom_type, char* *name)
 {
-    static char *tag_names[] = {
+    static char* tag_names[] = {
         "unknown", "title", "artist", "writer", "album",
         "date", "tool", "comment", "genre", "track",
         "disc", "compilation", "genre", "tempo", "cover",
@@ -203,13 +203,13 @@ static int32_t mp4ff_set_metadata_name (mp4ff_t *f, const uint8_t atom_type, cha
 }
 /*}}}*/
 /*{{{*/
-static int32_t mp4ff_parse_tag (mp4ff_t *f, const uint8_t parent_atom_type, const int32_t size)
+static int32_t mp4ff_parse_tag (mp4ff_t* f, const uint8_t parent_atom_type, const int32_t size)
 {
     uint8_t atom_type;
     uint8_t header_size = 0;
     uint64_t subsize, sumsize = 0;
-    char * name = NULL;
-  char * data = NULL;
+    char*  name = NULL;
+  char*  data = NULL;
   uint32_t done = 0;
 
 
@@ -311,7 +311,7 @@ static int32_t mp4ff_parse_tag (mp4ff_t *f, const uint8_t parent_atom_type, cons
 /*}}}*/
 
 /*{{{*/
-int32_t mp4ff_parse_metadata (mp4ff_t *f, const int32_t size)
+int32_t mp4ff_parse_metadata (mp4ff_t* f, const int32_t size)
 {
     uint64_t subsize, sumsize = 0;
     uint8_t atom_type;
@@ -332,7 +332,7 @@ int32_t mp4ff_parse_metadata (mp4ff_t *f, const int32_t size)
 /*{{{*/
 /* find a metadata item by name */
 /* returns 0 if item found, 1 if no such item */
-static int32_t mp4ff_meta_find_by_name (const mp4ff_t *f, const char *item, char **value)
+static int32_t mp4ff_meta_find_by_name (const mp4ff_t* f, const char* item, char** value)
 {
     uint32_t i;
 
@@ -352,15 +352,14 @@ static int32_t mp4ff_meta_find_by_name (const mp4ff_t *f, const char *item, char
 }
 /*}}}*/
 /*{{{*/
-int32_t mp4ff_meta_get_num_items (const mp4ff_t *f)
+int32_t mp4ff_meta_get_num_items (const mp4ff_t* f)
 {
     return f->tags.count;
 }
 /*}}}*/
 
 /*{{{*/
-int32_t mp4ff_meta_get_by_index (const mp4ff_t *f, uint32_t index,
-                                char **item, char **value)
+int32_t mp4ff_meta_get_by_index (const mp4ff_t* f, uint32_t index, char** item, char** value)
 {
     if (index >= f->tags.count)
     {
@@ -375,91 +374,91 @@ int32_t mp4ff_meta_get_by_index (const mp4ff_t *f, uint32_t index,
 }
 /*}}}*/
 /*{{{*/
-int32_t mp4ff_meta_get_title (const mp4ff_t *f, char **value)
+int32_t mp4ff_meta_get_title (const mp4ff_t* f, char** value)
 {
     return mp4ff_meta_find_by_name(f, "title", value);
 }
 /*}}}*/
 /*{{{*/
-int32_t mp4ff_meta_get_artist (const mp4ff_t *f, char **value)
+int32_t mp4ff_meta_get_artist (const mp4ff_t *f, char** value)
 {
     return mp4ff_meta_find_by_name(f, "artist", value);
 }
 /*}}}*/
 /*{{{*/
-int32_t mp4ff_meta_get_writer (const mp4ff_t *f, char **value)
+int32_t mp4ff_meta_get_writer (const mp4ff_t* f, char** value)
 {
     return mp4ff_meta_find_by_name(f, "writer", value);
 }
 /*}}}*/
 /*{{{*/
-int32_t mp4ff_meta_get_album (const mp4ff_t *f, char **value)
+int32_t mp4ff_meta_get_album (const mp4ff_t* f, char** value)
 {
     return mp4ff_meta_find_by_name(f, "album", value);
 }
 /*}}}*/
 /*{{{*/
-int32_t mp4ff_meta_get_date (const mp4ff_t *f, char **value)
+int32_t mp4ff_meta_get_date (const mp4ff_t* f, char* *value)
 {
     return mp4ff_meta_find_by_name(f, "date", value);
 }
 /*}}}*/
 /*{{{*/
-int32_t mp4ff_meta_get_tool (const mp4ff_t *f, char **value)
+int32_t mp4ff_meta_get_tool (const mp4ff_t* f, char** value)
 {
     return mp4ff_meta_find_by_name(f, "tool", value);
 }
 /*}}}*/
 /*{{{*/
-int32_t mp4ff_meta_get_comment (const mp4ff_t *f, char **value)
+int32_t mp4ff_meta_get_comment (const mp4ff_t* f, char** value)
 {
     return mp4ff_meta_find_by_name(f, "comment", value);
 }
 /*}}}*/
 /*{{{*/
-int32_t mp4ff_meta_get_genre (const mp4ff_t *f, char **value)
+int32_t mp4ff_meta_get_genre (const mp4ff_t* f, char** value)
 {
     return mp4ff_meta_find_by_name(f, "genre", value);
 }
 /*}}}*/
 /*{{{*/
-int32_t mp4ff_meta_get_track (const mp4ff_t *f, char **value)
+int32_t mp4ff_meta_get_track (const mp4ff_t* f, char** value)
 {
     return mp4ff_meta_find_by_name(f, "track", value);
 }
 /*}}}*/
 /*{{{*/
-int32_t mp4ff_meta_get_totaltracks (const mp4ff_t *f, char **value)
+int32_t mp4ff_meta_get_totaltracks (const mp4ff_t* f, char** value)
 {
     return mp4ff_meta_find_by_name(f, "totaltracks", value);
 }
 /*}}}*/
 /*{{{*/
-int32_t mp4ff_meta_get_disc (const mp4ff_t *f, char **value)
+int32_t mp4ff_meta_get_disc (const mp4ff_t* f, char** value)
 {
     return mp4ff_meta_find_by_name(f, "disc", value);
 }
 /*}}}*/
 /*{{{*/
-int32_t mp4ff_meta_get_totaldiscs (const mp4ff_t *f, char **value)
+int32_t mp4ff_meta_get_totaldiscs (const mp4ff_t* f, char** value)
 {
     return mp4ff_meta_find_by_name(f, "totaldiscs", value);
 }
 /*}}}*/
 /*{{{*/
-int32_t mp4ff_meta_get_compilation (const mp4ff_t *f, char **value)
+int32_t mp4ff_meta_get_compilation (const mp4ff_t* f, char** value)
 {
     return mp4ff_meta_find_by_name(f, "compilation", value);
 }
 /*}}}*/
 /*{{{*/
-int32_t mp4ff_meta_get_tempo (const mp4ff_t *f, char **value)
+int32_t mp4ff_meta_get_tempo (const mp4ff_t* f, char** value)
 {
     return mp4ff_meta_find_by_name(f, "tempo", value);
 }
 /*}}}*/
 /*{{{*/
-int32_t mp4ff_meta_get_coverart (const mp4ff_t *f, char **value)
+int32_t mp4ff_meta_get_coverart (const mp4ff_t* f, char** value)
 {
     return mp4ff_meta_find_by_name(f, "cover", value);
 }

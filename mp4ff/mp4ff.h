@@ -15,6 +15,18 @@ typedef struct {
   void* user_data;
   } mp4ff_callback_t;
 //}}}
+//{{{  struct mp4ff_tag_t
+typedef struct {
+  char* item;
+  char* value;
+  } mp4ff_tag_t;
+//}}}
+//{{{  struct  mp4ff_metadata_t
+typedef struct {
+  mp4ff_tag_t* tags;
+  uint32_t count;
+  } mp4ff_metadata_t;
+//}}}
 typedef void* mp4ff_t;
 
 mp4ff_t* mp4ff_open_read (mp4ff_callback_t* f);
@@ -25,6 +37,7 @@ int32_t mp4ff_get_sample_duration (const mp4ff_t* f, const int32_t track, const 
 int32_t mp4ff_get_sample_duration_use_offsets (const mp4ff_t* f, const int32_t track, const int32_t sample);
 int64_t mp4ff_get_sample_position (const mp4ff_t* f, const int32_t track, const int32_t sample);
 int32_t mp4ff_get_sample_offset (const mp4ff_t* f, const int32_t track, const int32_t sample);
+
 int32_t mp4ff_find_sample (const mp4ff_t* f, const int32_t track, const int64_t offset,int32_t* toskip);
 int32_t mp4ff_find_sample_use_offsets (const mp4ff_t* f, const int32_t track, const int64_t offset,int32_t* toskip);
 
@@ -67,22 +80,6 @@ int mp4ff_meta_get_compilation (const mp4ff_t* f, char** value);
 int mp4ff_meta_get_tempo (const mp4ff_t* f, char** value);
 int32_t mp4ff_meta_get_coverart (const mp4ff_t* f, char** value);
 
-//{{{
-/* metadata tag structure */
-typedef struct
-{
-    char* item;
-    char* value;
-} mp4ff_tag_t;
-//}}}
-//{{{
-/* metadata list structure */
-typedef struct
-{
-    mp4ff_tag_t *tags;
-    uint32_t count;
-} mp4ff_metadata_t;
-//}}}
 int32_t mp4ff_meta_update (mp4ff_callback_t* f, const mp4ff_metadata_t* data);
 
 //{{{

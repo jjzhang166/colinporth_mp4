@@ -30,45 +30,47 @@ int GetAACTrack (mp4ff_t* mp4ff) {
   int numTracks = mp4ff_total_tracks (mp4ff);
   printf ("numTracks:%d\n", numTracks);
 
-  for (int i = 0; i < numTracks; i++) {
+  for (int track = 0; track < numTracks; track++) {
+    printf ("%d %d\n", track, mp4ff_get_track_type (mp4ff, track));
+
     unsigned char* buff = NULL;
     unsigned int buff_size = 0;
-    mp4ff_get_decoder_config (mp4ff, i, &buff, &buff_size);
+    mp4ff_get_decoder_config (mp4ff, track, &buff, &buff_size);
     free (buff);
-    return i;
+    return track;
     }
 
   return -1;
   }
 //}}}
 
-int adts_sample_rates[] = {96000,88200,64000,48000,44100,32000,24000,22050,16000,12000,11025,8000,7350,0,0,0};
+int adts_sample_rates[] = { 96000, 88200, 64000, 48000, 44100, 32000, 24000, 22050, 16000, 12000, 11025, 8000, 7350,0,0,0};
 //{{{
-int findAdtsSRIndex (int sr) {
+int findAdtsSRIndex (int sampleRate) {
 
-  int i;
-  for (i = 0; i < 16; i++)
-    if (sr == adts_sample_rates[i])
+  for (int i = 0; i < 16; i++)
+    if (sampleRate == adts_sample_rates[i])
       return i;
+
   return 16 - 1;
   }
 //}}}
 //{{{
 unsigned char* makeAdtsHeader (int framesize) {
 
+  // set stuff
   int object_type = 2;
   int samplerate = 44100;
   int header_type = 0;
   int sbr = 0;
   int channels = 2;
 
-
   int profile = (object_type - 1) & 0x3;
   int sr_index = findAdtsSRIndex(samplerate);
 
   int dataSize = 7;
-  unsigned char* data = (unsigned char*)malloc (dataSize * sizeof(unsigned char));
-  memset (data, 0, dataSize * sizeof(unsigned char));
+  unsigned char* data = (unsigned char*)malloc (dataSize);
+  memset (data, 0, dataSize);
 
   data[0] += 0xFF;                      /* 8b: syncword */
 
@@ -154,29 +156,26 @@ int main (int argc, char** argv) {
   long numSamples = mp4ff_num_samples (mp4ff, track);
   printf ("timescale:%d, samples:%d\n", timescale, numSamples);
 
-  int j = mp4ff_meta_get_num_items (mp4ff);
-  for (int k = 0; k < j; k++) {
+  int meta_num_items = mp4ff_meta_get_num_items (mp4ff);
+  for (int k = 0; k < meta_num_items; k++) {
     char* tag = NULL;
     char* item = NULL;
     if (mp4ff_meta_get_by_index (mp4ff, k, &item, &tag)) {
-      if (item != NULL && tag != NULL) {
+      if (item != NULL && tag != NULL)
         printf ("meta:%d %s %s\n", k, item, tag);
-        free (item);
-        item = NULL;
-        free (tag);
-        tag = NULL;
-        }
+      free (item);
+      free (tag);
       }
     }
 
   auto adtsFile = fopen ("C:/Users/colin/Desktop/nnnn.adts", "wb");
   for (long sampleId = 0; sampleId < numSamples; sampleId++) {
-    auto dur = mp4ff_get_sample_duration (mp4ff, track, sampleId);
+    auto duration = mp4ff_get_sample_duration (mp4ff, track, sampleId);
     auto rc = mp4ff_read_sample (mp4ff, track, sampleId, &buffer,  &buffer_size);
-    printf ("reading id:%d dur:%d buf:%p bufSize:%d        \r", sampleId, dur, buffer, buffer_size);
+    printf ("reading id:%d dur:%d buf:%p bufSize:%d        \r", sampleId, duration, buffer, buffer_size);
 
-    auto adtsData = makeAdtsHeader (buffer_size);
-    fwrite (adtsData, 1, 7, adtsFile);
+    auto adtsHeader = makeAdtsHeader (buffer_size);
+    fwrite (adtsHeader, 1, 7, adtsFile);
     fwrite (buffer, 1, buffer_size, adtsFile);
     free (buffer);
     }
@@ -187,7 +186,7 @@ int main (int argc, char** argv) {
   free (mp4cb);
   fclose (mp4File);
 
-  printf("\ndone, sleep 10s\n");
+  printf ("\ndone, sleep 10s\n");
   Sleep (10000);
   return 0;
   }
