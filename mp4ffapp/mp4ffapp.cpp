@@ -142,7 +142,7 @@ int main (int argc, char** argv) {
   mp4cb->user_data = mp4File;
   //}}}
 
-  auto mp4ff = mp4ff_open_read (mp4cb);
+  auto mp4ff = mp4ff_open (mp4cb, true);
   if (!mp4ff) {
     //{{{  error return
     printf ("unable to open mp4ff\n");
@@ -177,7 +177,7 @@ int main (int argc, char** argv) {
     uint8_t* buffer = (uint8_t*)malloc (buffer_size);
 
     auto bytes = mp4ff_read_sample (mp4ff, track, sampleId, buffer);
-    printf ("reading id:%d dur:%d buf:%p bufSize:%d bytes:%d\n", sampleId, duration, buffer, buffer_size, bytes);
+    //printf ("reading id:%d dur:%d buf:%p bufSize:%d bytes:%d\n", sampleId, duration, buffer, buffer_size, bytes);
 
     auto adtsHeader = makeAdtsHeader (buffer_size);
     fwrite (adtsHeader, 1, 7, adtsFile);

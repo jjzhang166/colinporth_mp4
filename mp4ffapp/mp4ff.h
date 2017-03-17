@@ -7,16 +7,35 @@ extern "C" {
 #endif
 //}}}
 
-//{{{  track defines
-#define MAX_TRACKS 1024
-
-#define TRACK_UNKNOWN 0
-#define TRACK_AUDIO   1
-#define TRACK_VIDEO   2
-#define TRACK_SYSTEM  3
-//}}}
 //{{{  atom defines
 #define SUBATOMIC 128
+
+/* atoms with subatoms */
+#define ATOM_MOOV 1
+#define ATOM_TRAK 2
+#define ATOM_EDTS 3
+#define ATOM_MDIA 4
+#define ATOM_MINF 5
+#define ATOM_STBL 6
+#define ATOM_UDTA 7
+#define ATOM_ILST 8 /* iTunes Metadata list */
+#define ATOM_TITLE 9
+#define ATOM_ARTIST 10
+#define ATOM_WRITER 11
+#define ATOM_ALBUM 12
+#define ATOM_DATE 13
+#define ATOM_TOOL 14
+#define ATOM_COMMENT 15
+#define ATOM_GENRE1 16
+#define ATOM_TRACK 17
+#define ATOM_DISC 18
+#define ATOM_COMPILATION 19
+#define ATOM_GENRE2 20
+#define ATOM_TEMPO 21
+#define ATOM_COVER 22
+#define ATOM_DRMS 23
+#define ATOM_SINF 24
+#define ATOM_SCHI 25
 
 /* atoms without subatoms */
 #define ATOM_FTYP 129
@@ -66,35 +85,17 @@ extern "C" {
 #define ATOM_PODCAST        172
 
 #define ATOM_UNKNOWN 255
+
 #define ATOM_FREE ATOM_UNKNOWN
 #define ATOM_SKIP ATOM_UNKNOWN
+//}}}
+//{{{  track defines
+#define MAX_TRACKS 16
 
-/* atoms with subatoms */
-#define ATOM_MOOV 1
-#define ATOM_TRAK 2
-#define ATOM_EDTS 3
-#define ATOM_MDIA 4
-#define ATOM_MINF 5
-#define ATOM_STBL 6
-#define ATOM_UDTA 7
-#define ATOM_ILST 8 /* iTunes Metadata list */
-#define ATOM_TITLE 9
-#define ATOM_ARTIST 10
-#define ATOM_WRITER 11
-#define ATOM_ALBUM 12
-#define ATOM_DATE 13
-#define ATOM_TOOL 14
-#define ATOM_COMMENT 15
-#define ATOM_GENRE1 16
-#define ATOM_TRACK 17
-#define ATOM_DISC 18
-#define ATOM_COMPILATION 19
-#define ATOM_GENRE2 20
-#define ATOM_TEMPO 21
-#define ATOM_COVER 22
-#define ATOM_DRMS 23
-#define ATOM_SINF 24
-#define ATOM_SCHI 25
+#define TRACK_UNKNOWN 0
+#define TRACK_AUDIO   1
+#define TRACK_VIDEO   2
+#define TRACK_SYSTEM  3
 //}}}
 //{{{  struct mp4ff_callback_t
 typedef struct {
@@ -187,10 +188,12 @@ typedef struct {
 
   /* metadata */
   mp4ff_metadata_t tags;
+
+  bool debug;
   } mp4ff_t;
 //}}}
 
-mp4ff_t* mp4ff_open_read (mp4ff_callback_t* f);
+mp4ff_t* mp4ff_open (mp4ff_callback_t* f, bool debug);
 void mp4ff_close (mp4ff_t* f);
 
 int32_t mp4ff_get_sample_duration (const mp4ff_t* f, int track, int sample);
