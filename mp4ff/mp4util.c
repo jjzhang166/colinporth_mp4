@@ -15,7 +15,7 @@ int32_t mp4ff_read_data (mp4ff_t* f, int8_t* data, uint32_t size) {
 /*}}}*/
 
 /*{{{*/
-int32_t mp4ff_set_position (mp4ff_t* f, const int64_t position) {
+int32_t mp4ff_set_position (mp4ff_t* f, const uint64_t position) {
 
   f->stream->seek (f->stream->user_data, position);
   f->current_position = position;

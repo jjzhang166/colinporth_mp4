@@ -5,7 +5,7 @@
 /*}}}*/
 
 /*{{{*/
-static int32_t mp4ff_chunk_of_sample (const mp4ff_t* f, const int32_t track, const int32_t sample,
+static int32_t mp4ff_chunk_of_sample (const mp4ff_t* f, int track, int sample,
                                       int32_t* chunk_sample, int32_t *chunk) {
 
   int32_t total_entries = 0;
@@ -48,7 +48,7 @@ static int32_t mp4ff_chunk_of_sample (const mp4ff_t* f, const int32_t track, con
   }
 /*}}}*/
 /*{{{*/
-static int32_t mp4ff_chunk_to_offset (const mp4ff_t* f, const int32_t track, const int32_t chunk) {
+static int32_t mp4ff_chunk_to_offset (const mp4ff_t* f, int track, int32_t chunk) {
 
  const mp4ff_track_t* p_track = f->track[track];
 
@@ -64,8 +64,7 @@ static int32_t mp4ff_chunk_to_offset (const mp4ff_t* f, const int32_t track, con
 /*}}}*/
 
 /*{{{*/
-static int32_t mp4ff_sample_range_size (const mp4ff_t* f, const int32_t track,
-                                        const int32_t chunk_sample, const int32_t sample) {
+static int32_t mp4ff_sample_range_size (const mp4ff_t* f, int track, int32_t chunk_sample, int sample) {
 
   int32_t total = 0;
   const mp4ff_track_t* p_track = f->track[track];
@@ -84,7 +83,7 @@ static int32_t mp4ff_sample_range_size (const mp4ff_t* f, const int32_t track,
   }
 /*}}}*/
 /*{{{*/
-static int32_t mp4ff_sample_to_offset (const mp4ff_t* f, const int32_t track, const int32_t sample) {
+static int32_t mp4ff_sample_to_offset (const mp4ff_t* f, int track, int sample) {
 
   int32_t chunk;
   int32_t chunk_sample;
@@ -98,7 +97,7 @@ static int32_t mp4ff_sample_to_offset (const mp4ff_t* f, const int32_t track, co
 /*}}}*/
 
 /*{{{*/
-int32_t mp4ff_audio_frame_size (const mp4ff_t* f, const int32_t track, const int32_t sample) {
+int32_t mp4ff_audio_frame_size (const mp4ff_t* f, int track, int sample) {
 
   int32_t bytes;
   const mp4ff_track_t * p_track = f->track[track];
@@ -112,7 +111,7 @@ int32_t mp4ff_audio_frame_size (const mp4ff_t* f, const int32_t track, const int
   }
 /*}}}*/
 /*{{{*/
-int32_t mp4ff_set_sample_position (mp4ff_t* f, const int32_t track, const int32_t sample) {
+int32_t mp4ff_set_sample_position (mp4ff_t* f, int track, int sample) {
 
   int32_t offset = mp4ff_sample_to_offset (f, track, sample);
   mp4ff_set_position (f, offset);

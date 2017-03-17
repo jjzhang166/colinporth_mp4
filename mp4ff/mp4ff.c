@@ -43,8 +43,9 @@ static int need_parse_when_meta_only (uint8_t atom_type) {
 
   }
 /*}}}*/
+
 /*{{{*/
-static int32_t parse_sub_atoms (mp4ff_t* f, const uint64_t total_size, int meta_only) {
+int32_t parse_sub_atoms (mp4ff_t* f, const uint64_t total_size, int meta_only) {
 // parse atoms that are sub atoms of other atoms
 
   uint64_t size;
@@ -77,7 +78,7 @@ static int32_t parse_sub_atoms (mp4ff_t* f, const uint64_t total_size, int meta_
   }
 /*}}}*/
 /*{{{*/
-static int32_t parse_atoms (mp4ff_t* f, int meta_only) {
+int32_t parse_atoms (mp4ff_t* f, int meta_only) {
 // parse root atoms
 
   uint64_t size;
@@ -177,19 +178,19 @@ int32_t mp4ff_total_tracks (const mp4ff_t* f) {
   }
 /*}}}*/
 /*{{{*/
-int32_t mp4ff_get_track_type (const mp4ff_t* f, const int track) {
+int32_t mp4ff_get_track_type (const mp4ff_t* f, int track) {
 
   return f->track[track]->type;
   }
 /*}}}*/
 /*{{{*/
-int32_t mp4ff_time_scale (const mp4ff_t* f, const int32_t track) {
+int32_t mp4ff_time_scale (const mp4ff_t* f, int track) {
 
   return f->track[track]->timeScale;
   }
 /*}}}*/
 /*{{{*/
-int32_t mp4ff_get_decoder_config (const mp4ff_t* f, const int32_t track, uint8_t** ppBuf, uint32_t* pBufSize) {
+int32_t mp4ff_get_decoder_config (const mp4ff_t* f, int track, uint8_t** ppBuf, uint32_t* pBufSize) {
 
   if (track >= f->total_tracks) {
     *ppBuf = NULL;
@@ -216,26 +217,26 @@ int32_t mp4ff_get_decoder_config (const mp4ff_t* f, const int32_t track, uint8_t
 /*}}}*/
 
 /*{{{*/
-uint32_t mp4ff_get_avg_bitrate (const mp4ff_t* f, const int32_t track) {
+uint32_t mp4ff_get_avg_bitrate (const mp4ff_t* f, int track) {
 
   return f->track[track]->avgBitrate;
   }
 /*}}}*/
 /*{{{*/
-uint32_t mp4ff_get_max_bitrate (const mp4ff_t* f, const int32_t track) {
+uint32_t mp4ff_get_max_bitrate (const mp4ff_t* f, int track) {
 
   return f->track[track]->maxBitrate;
   }
 /*}}}*/
 
 /*{{{*/
-int64_t mp4ff_get_track_duration (const mp4ff_t* f, const int32_t track) {
+int64_t mp4ff_get_track_duration (const mp4ff_t* f, int track) {
 
   return f->track[track]->duration;
   }
 /*}}}*/
 /*{{{*/
-int64_t mp4ff_get_track_duration_use_offsets (const mp4ff_t* f, const int32_t track) {
+int64_t mp4ff_get_track_duration_use_offsets (const mp4ff_t* f, int track) {
 
   int64_t duration = mp4ff_get_track_duration(f,track);
   if (duration!=-1) {
@@ -250,7 +251,7 @@ int64_t mp4ff_get_track_duration_use_offsets (const mp4ff_t* f, const int32_t tr
   }
 /*}}}*/
 /*{{{*/
-int32_t mp4ff_num_samples (const mp4ff_t* f, const int32_t track) {
+int32_t mp4ff_num_samples (const mp4ff_t* f, int track) {
 
   int32_t i;
   int32_t total = 0;
@@ -262,26 +263,26 @@ int32_t mp4ff_num_samples (const mp4ff_t* f, const int32_t track) {
 /*}}}*/
 
 /*{{{*/
-uint32_t mp4ff_get_sample_rate (const mp4ff_t* f, const int32_t track) {
+uint32_t mp4ff_get_sample_rate (const mp4ff_t* f, int track) {
 
   return f->track[track]->sampleRate;
   }
 /*}}}*/
 /*{{{*/
-uint32_t mp4ff_get_channel_count (const mp4ff_t* f, const int32_t track) {
+uint32_t mp4ff_get_channel_count (const mp4ff_t* f, int track) {
 
   return f->track[track]->channelCount;
   }
 /*}}}*/
 /*{{{*/
-uint32_t mp4ff_get_audio_type (const mp4ff_t* f, const int32_t track) {
+uint32_t mp4ff_get_audio_type (const mp4ff_t* f, int track) {
 
   return f->track[track]->audioType;
   }
 /*}}}*/
 
 /*{{{*/
-int32_t mp4ff_get_sample_duration_use_offsets (const mp4ff_t* f, const int32_t track, const int32_t sample) {
+int32_t mp4ff_get_sample_duration_use_offsets (const mp4ff_t* f, int track, int sample) {
 
   int32_t d, o;
   d = mp4ff_get_sample_duration (f, track, sample);
@@ -297,7 +298,7 @@ int32_t mp4ff_get_sample_duration_use_offsets (const mp4ff_t* f, const int32_t t
   }
 /*}}}*/
 /*{{{*/
-int32_t mp4ff_get_sample_duration (const mp4ff_t* f, const int32_t track, const int32_t sample) {
+int32_t mp4ff_get_sample_duration (const mp4ff_t* f, int track, int sample) {
 
   int32_t i, co = 0;
 
@@ -312,7 +313,7 @@ int32_t mp4ff_get_sample_duration (const mp4ff_t* f, const int32_t track, const 
   }
 /*}}}*/
 /*{{{*/
-int64_t mp4ff_get_sample_position (const mp4ff_t* f, const int32_t track, const int32_t sample) {
+int64_t mp4ff_get_sample_position (const mp4ff_t* f, int track, int sample) {
 
   int32_t i, co = 0;
   int64_t acc = 0;
@@ -332,7 +333,7 @@ int64_t mp4ff_get_sample_position (const mp4ff_t* f, const int32_t track, const 
   }
 /*}}}*/
 /*{{{*/
-int32_t mp4ff_get_sample_offset (const mp4ff_t* f, const int32_t track, const int32_t sample) {
+int32_t mp4ff_get_sample_offset (const mp4ff_t* f, int track, int sample) {
 
   int32_t i, co = 0;
 
@@ -348,7 +349,7 @@ int32_t mp4ff_get_sample_offset (const mp4ff_t* f, const int32_t track, const in
 /*}}}*/
 
 /*{{{*/
-int32_t mp4ff_find_sample (const mp4ff_t* f, const int32_t track, const int64_t offset,int32_t* toskip) {
+int32_t mp4ff_find_sample (const mp4ff_t* f, int track, int64_t offset, int32_t* toskip) {
 
   int32_t i, co = 0;
   int64_t offset_total = 0;
@@ -373,64 +374,37 @@ int32_t mp4ff_find_sample (const mp4ff_t* f, const int32_t track, const int64_t 
   }
 /*}}}*/
 /*{{{*/
-int32_t mp4ff_find_sample_use_offsets (const mp4ff_t* f, const int32_t track, const int64_t offset,int32_t* toskip) {
+int32_t mp4ff_find_sample_use_offsets (const mp4ff_t* f, int track, int64_t offset, int32_t* toskip) {
 
   return mp4ff_find_sample(f,track,offset + mp4ff_get_sample_offset(f,track,0),toskip);
   }
 /*}}}*/
 
 /*{{{*/
-int32_t mp4ff_read_sample (mp4ff_t* f, const int32_t track, const int32_t sample, uint8_t** audio_buffer,  uint32_t* bytes) {
+int32_t mp4ff_read_sample_size (mp4ff_t* f, int track, int sample) {
 
-  int32_t result = 0;
-
-  *bytes = mp4ff_audio_frame_size (f, track, sample);
-  if (*bytes == 0)
-    return 0;
-
-  *audio_buffer = (uint8_t*)malloc(*bytes);
-  mp4ff_set_sample_position (f, track, sample);
-  result = mp4ff_read_data (f, *audio_buffer, *bytes);
-
-  if (!result) {
-    free (*audio_buffer);
-    *audio_buffer = 0;
-    return 0;
-    }
-
-  #ifdef ITUNES_DRM
-    if (f->track[track]->p_drms != NULL)
-      drms_decrypt(f->track[track]->p_drms, (uint32_t*)*audio_buffer, *bytes);
-  #endif
-
-  return *bytes;
-  }
-/*}}}*/
-/*{{{*/
-int32_t mp4ff_read_sample_v2 (mp4ff_t* f, const int track, const int sample,unsigned char* buffer) {
-
-  int32_t result = 0;
-  int32_t size = mp4ff_audio_frame_size(f,track,sample);
-  if (size <= 0)
-    return 0;
-
-  mp4ff_set_sample_position(f, track, sample);
-  result = mp4ff_read_data(f,buffer,size);
-
-  #ifdef ITUNES_DRM
-    if (f->track[track]->p_drms != NULL)
-      drms_decrypt(f->track[track]->p_drms, (uint32_t*)buffer, size);
-  #endif
-
-  return result;
-  }
-/*}}}*/
-/*{{{*/
-int32_t mp4ff_read_sample_getsize (mp4ff_t* f, const int track, const int sample) {
-
-  int32_t temp = mp4ff_audio_frame_size(f, track, sample);
+  int32_t temp = mp4ff_audio_frame_size (f, track, sample);
   if (temp < 0)
     temp = 0;
   return temp;
+  }
+/*}}}*/
+/*{{{*/
+int32_t mp4ff_read_sample (mp4ff_t* f, int track, int sample, uint8_t* buffer) {
+
+  int32_t result = 0;
+  int32_t size = mp4ff_audio_frame_size (f, track, sample);
+  if (size <= 0)
+    return 0;
+
+  mp4ff_set_sample_position (f, track, sample);
+  result = mp4ff_read_data (f, buffer, size);
+
+  #ifdef ITUNES_DRM
+    if (f->track[track]->p_drms != NULL)
+      drms_decrypt (f->track[track]->p_drms, (uint32_t*)buffer, size);
+  #endif
+
+  return result;
   }
 /*}}}*/

@@ -112,7 +112,7 @@ static const char* ID3v1GenreList[] = {
 /*}}}*/
 
 /*{{{*/
-uint32_t mp4ff_meta_genre_to_index (const char*  genrestr)
+uint32_t mp4ff_meta_genre_to_index (const char* genrestr)
 {
   unsigned n;
   for(n=0;n<sizeof(ID3v1GenreList)/sizeof(ID3v1GenreList[0]);n++)
@@ -137,7 +137,7 @@ const char*  mp4ff_meta_index_to_genre (uint32_t idx)
 /*}}}*/
 
 /*{{{*/
-static int32_t TrackToString (char** str, const uint16_t track, const uint16_t totalTracks)
+static int32_t TrackToString (char** str, uint16_t track, uint16_t totalTracks)
 {
   char temp[32];
     sprintf(temp, "%.5u of %.5u", track, totalTracks);
@@ -147,7 +147,7 @@ static int32_t TrackToString (char** str, const uint16_t track, const uint16_t t
 /*}}}*/
 
 /*{{{*/
-static int32_t mp4ff_set_metadata_name (mp4ff_t* f, const uint8_t atom_type, char* *name)
+static int32_t mp4ff_set_metadata_name (mp4ff_t* f, uint8_t atom_type, char* *name)
 {
     static char* tag_names[] = {
         "unknown", "title", "artist", "writer", "album",
@@ -203,7 +203,7 @@ static int32_t mp4ff_set_metadata_name (mp4ff_t* f, const uint8_t atom_type, cha
 }
 /*}}}*/
 /*{{{*/
-static int32_t mp4ff_parse_tag (mp4ff_t* f, const uint8_t parent_atom_type, const int32_t size)
+static int32_t mp4ff_parse_tag (mp4ff_t* f, uint8_t parent_atom_type, int32_t size)
 {
     uint8_t atom_type;
     uint8_t header_size = 0;
@@ -311,7 +311,7 @@ static int32_t mp4ff_parse_tag (mp4ff_t* f, const uint8_t parent_atom_type, cons
 /*}}}*/
 
 /*{{{*/
-int32_t mp4ff_parse_metadata (mp4ff_t* f, const int32_t size)
+int32_t mp4ff_parse_metadata (mp4ff_t* f, int32_t size)
 {
     uint64_t subsize, sumsize = 0;
     uint8_t atom_type;

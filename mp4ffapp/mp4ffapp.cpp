@@ -14,7 +14,7 @@
 
 //{{{
 uint32_t seekCallback (void* user_data, uint64_t position) {
-  return (uint32_t)fseek ((FILE*)user_data, position, SEEK_SET);
+  return fseek ((FILE*)user_data, (LONG)position, SEEK_SET);
   }
 //}}}
 //{{{
@@ -24,27 +24,30 @@ uint32_t readCallback (void* user_data, void* buffer, uint32_t length) {
 //}}}
 
 //{{{
-int GetAACTrack (mp4ff_t* mp4ff) {
+int getAacTrack (mp4ff_t* mp4ff) {
 
   // find AAC track
+  int bestTrack = -1;
+
   int numTracks = mp4ff_total_tracks (mp4ff);
   printf ("numTracks:%d\n", numTracks);
 
   for (int track = 0; track < numTracks; track++) {
-    printf ("%d %d\n", track, mp4ff_get_track_type (mp4ff, track));
-
-    unsigned char* buff = NULL;
-    unsigned int buff_size = 0;
-    mp4ff_get_decoder_config (mp4ff, track, &buff, &buff_size);
-    free (buff);
-    return track;
+    printf ("- track:%d type:%d\n", track, mp4ff_get_track_type (mp4ff, track));
+    if (mp4ff_get_track_type (mp4ff, track) == TRACK_AUDIO)
+      bestTrack = track;
     }
 
-  return -1;
+  return bestTrack;
   }
 //}}}
 
-int adts_sample_rates[] = { 96000, 88200, 64000, 48000, 44100, 32000, 24000, 22050, 16000, 12000, 11025, 8000, 7350,0,0,0};
+//{{{
+const int adts_sample_rates[] = { 96000, 88200, 64000, 48000,
+                                  44100, 32000, 24000, 22050,
+                                  16000, 12000, 11025,  8000,
+                                   7350,     0,     0,     0 };
+//}}}
 //{{{
 int findAdtsSRIndex (int sampleRate) {
 
@@ -52,32 +55,34 @@ int findAdtsSRIndex (int sampleRate) {
     if (sampleRate == adts_sample_rates[i])
       return i;
 
-  return 16 - 1;
+  return 15;
   }
 //}}}
 //{{{
-unsigned char* makeAdtsHeader (int framesize) {
+uint8_t* makeAdtsHeader (int frameSize) {
 
-  // set stuff
-  int object_type = 2;
-  int samplerate = 44100;
   int header_type = 0;
   int sbr = 0;
   int channels = 2;
 
+  int object_type = 2;
   int profile = (object_type - 1) & 0x3;
-  int sr_index = findAdtsSRIndex(samplerate);
+
+  int samplerate = 44100;
+  int sr_index = findAdtsSRIndex (samplerate);
 
   int dataSize = 7;
-  unsigned char* data = (unsigned char*)malloc (dataSize);
+  auto data = (uint8_t*)malloc (dataSize);
   memset (data, 0, dataSize);
+
+  frameSize += dataSize;
 
   data[0] += 0xFF;                      /* 8b: syncword */
 
-  data[1] += 0xF0;                      /* 4b: syncword */
+  data[1] += 0xF1;                      /* 4b: syncword */
                                         /* 1b: mpeg id = 0 */
                                         /* 2b: layer = 0 */
-  data[1] += 1;                         /* 1b: protection absent */
+                                        /* 1b: protection absent */
 
   data[2] += ((profile << 6) & 0xC0);   /* 2b: profile */
   data[2] += ((sr_index << 2) & 0x3C);  /* 4b: sampling_frequency_index */
@@ -89,11 +94,11 @@ unsigned char* makeAdtsHeader (int framesize) {
                                         /* 1b: home */
                                         /* 1b: copyright_id */
                                         /* 1b: copyright_id_start */
-  data[3] += ((framesize >> 11) & 0x3); /* 2b: aac_frame_length */
+  data[3] += ((frameSize >> 11) & 0x3); /* 2b: aac_frame_length */
 
-  data[4] += ((framesize >> 3) & 0xFF); /* 8b: aac_frame_length */
+  data[4] += ((frameSize >> 3) & 0xFF); /* 8b: aac_frame_length */
 
-  data[5] += ((framesize << 5) & 0xE0); /* 3b: aac_frame_length */
+  data[5] += ((frameSize << 5) & 0xE0); /* 3b: aac_frame_length */
   data[5] += ((0x7FF >> 6) & 0x1F);     /* 5b: adts_buffer_fullness */
 
   data[6] += ((0x7FF << 2) & 0x3F);     /* 6b: adts_buffer_fullness */
@@ -145,12 +150,8 @@ int main (int argc, char** argv) {
     }
     //}}}
 
-  auto track = GetAACTrack (mp4ff);
-  printf ("first track:%d\n", track);
-
-  unsigned char* buffer;
-  unsigned int buffer_size;
-  mp4ff_get_decoder_config (mp4ff, track, &buffer, &buffer_size);
+  auto track = getAacTrack (mp4ff);
+  printf ("audio track:%d\n", track);
 
   auto timescale = mp4ff_time_scale (mp4ff, track);
   long numSamples = mp4ff_num_samples (mp4ff, track);
@@ -171,8 +172,12 @@ int main (int argc, char** argv) {
   auto adtsFile = fopen ("C:/Users/colin/Desktop/nnnn.adts", "wb");
   for (long sampleId = 0; sampleId < numSamples; sampleId++) {
     auto duration = mp4ff_get_sample_duration (mp4ff, track, sampleId);
-    auto rc = mp4ff_read_sample (mp4ff, track, sampleId, &buffer,  &buffer_size);
-    printf ("reading id:%d dur:%d buf:%p bufSize:%d        \r", sampleId, duration, buffer, buffer_size);
+
+    auto buffer_size = mp4ff_read_sample_size (mp4ff, track, sampleId);
+    uint8_t* buffer = (uint8_t*)malloc (buffer_size);
+
+    auto bytes = mp4ff_read_sample (mp4ff, track, sampleId, buffer);
+    printf ("reading id:%d dur:%d buf:%p bufSize:%d bytes:%d\n", sampleId, duration, buffer, buffer_size, bytes);
 
     auto adtsHeader = makeAdtsHeader (buffer_size);
     fwrite (adtsHeader, 1, 7, adtsFile);
@@ -186,8 +191,8 @@ int main (int argc, char** argv) {
   free (mp4cb);
   fclose (mp4File);
 
-  printf ("\ndone, sleep 10s\n");
-  Sleep (10000);
+  printf ("done, sleep 30s\n");
+  Sleep (30000);
   return 0;
   }
 //}}}
