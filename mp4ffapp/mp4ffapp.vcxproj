@@ -139,7 +139,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="mp4ff.c" />
+    <ClCompile Include="mp4ff.cpp" />
     <ClCompile Include="mp4ffapp.cpp" />
   </ItemGroup>
   <ItemGroup>

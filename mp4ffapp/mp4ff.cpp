@@ -1,5 +1,5 @@
 // mp4ff.c
-/*{{{  includes*/
+//{{{  includes
 #define _CRT_SECURE_NO_WARNINGS
 #include <stdlib.h>
 #include <string.h>
@@ -9,26 +9,26 @@
 
 #define stricmp _stricmp
 #define strdup _strdup
-/*}}}*/
-/*{{{  types*/
-/*{{{  struct stdmeta_entry*/
+//}}}
+//{{{  types
+//{{{  struct stdmeta_entry
 typedef struct {
   const char * atom;
   const char * name;
   } stdmeta_entry;
-/*}}}*/
-/*{{{  struct membuffer*/
+//}}}
+//{{{  struct membuffer
 typedef struct {
   void* data;
   unsigned written;
   unsigned allocated;
   unsigned error;
   } membuffer;
-/*}}}*/
-/*}}}*/
-/*{{{  const*/
+//}}}
+//}}}
+//{{{  const
 #define COPYRIGHT_SYMBOL ((int8_t)0xA9)
-/*{{{*/
+//{{{
 static const char* tag_names[] = {
     "unknown", "title", "artist", "writer", "album",
     "date", "tool", "comment", "genre", "track",
@@ -39,8 +39,8 @@ static const char* tag_names[] = {
     "sortwriter", "sortshow",
     "season", "episode", "podcast"
     };
-/*}}}*/
-/*{{{*/
+//}}}
+//{{{
 static const char* ID3v1GenreList[] = {
     "Blues", "Classic Rock", "Country", "Dance", "Disco", "Funk",
     "Grunge", "Hip-Hop", "Jazz", "Metal", "New Age", "Oldies",
@@ -69,9 +69,9 @@ static const char* ID3v1GenreList[] = {
     "Christian Rock", "Merengue", "Salsa", "Thrash Metal", "Anime", "JPop",
     "SynthPop",
 };
-/*}}}*/
+//}}}
 
-/*{{{*/
+//{{{
 static stdmeta_entry stdmetas[] =
 {
   {"\xA9" "nam", "title"},
@@ -90,34 +90,34 @@ static stdmeta_entry stdmetas[] =
   /* added by AJS */
   {"aART", "album_artist"},
 };
-/*}}}*/
-/*}}}*/
+//}}}
+//}}}
 
-/*{{{  read utils*/
-/*{{{*/
+//{{{  read utils
+//{{{
 static int64_t mp4ff_position (const mp4ff_t* f) {
   return f->current_position;
   }
-/*}}}*/
-/*{{{*/
+//}}}
+//{{{
 static int32_t mp4ff_set_position (mp4ff_t* f, const uint64_t position) {
 
   f->stream->seek (f->stream->user_data, position);
   f->current_position = position;
   return 0;
   }
-/*}}}*/
+//}}}
 
-/*{{{*/
-static int32_t mp4ff_read_data (mp4ff_t* f, int8_t* data, uint32_t size) {
+//{{{
+static int32_t mp4ff_read_data (mp4ff_t* f, uint8_t* data, uint32_t size) {
 
   int32_t result = f->stream->read (f->stream->user_data, data, size);
   f->current_position += size;
   return result;
   }
-/*}}}*/
+//}}}
 
-/*{{{*/
+//{{{
 static uint64_t mp4ff_read_int64 (mp4ff_t* f) {
 
   uint8_t data[8];
@@ -129,61 +129,58 @@ static uint64_t mp4ff_read_int64 (mp4ff_t* f) {
 
   return result;
   }
-/*}}}*/
-/*{{{*/
+//}}}
+//{{{
 static uint32_t mp4ff_read_int32 (mp4ff_t* f) {
 
-  int8_t data[4];
+  uint8_t data[4];
   mp4ff_read_data (f, data, 4);
 
-  uint32_t a = (uint8_t)data[0];
-  uint32_t b = (uint8_t)data[1];
-  uint32_t c = (uint8_t)data[2];
-  uint32_t d = (uint8_t)data[3];
+  uint32_t a = data[0];
+  uint32_t b = data[1];
+  uint32_t c = data[2];
+  uint32_t d = data[3];
 
   return (a<<24) | (b<<16) | (c<<8) | d;
   }
-/*}}}*/
-/*{{{*/
+//}}}
+//{{{
 static uint32_t mp4ff_read_int24 (mp4ff_t* f) {
 
-  int8_t data[4];
+  uint8_t data[4];
   mp4ff_read_data (f, data, 3);
 
-  uint32_t a = (uint8_t)data[0];
-  uint32_t b = (uint8_t)data[1];
-  uint32_t c = (uint8_t)data[2];
+  uint32_t a = data[0];
+  uint32_t b = data[1];
+  uint32_t c = data[2];
 
   return (a<<16) | (b<<8) | c;
   }
-/*}}}*/
-/*{{{*/
+//}}}
+//{{{
 static uint16_t mp4ff_read_int16 (mp4ff_t* f) {
 
-  int8_t data[2];
+  uint8_t data[2];
   mp4ff_read_data (f, data, 2);
 
-  uint32_t a = (uint8_t)data[0];
-  uint32_t b = (uint8_t)data[1];
-
-  return (a<<8) | b;
+  return (data[0]<<8) | data[1];
   }
-/*}}}*/
+//}}}
 
-/*{{{*/
+//{{{
 static uint8_t mp4ff_read_char (mp4ff_t* f) {
 
   uint8_t output;
   mp4ff_read_data (f, &output, 1);
   return output;
   }
-/*}}}*/
-/*{{{*/
+//}}}
+//{{{
 static char* mp4ff_read_string (mp4ff_t* f, uint32_t length) {
 
-  char* str = (char*)malloc (length + 1);
+  uint8_t* str = (uint8_t*)malloc (length + 1);
   if (str != 0) {
-    if ((uint32_t)mp4ff_read_data (f,str,length) != length) {
+    if ((uint32_t)mp4ff_read_data (f, str, length) != length) {
       free (str);
       str = 0;
       }
@@ -191,11 +188,11 @@ static char* mp4ff_read_string (mp4ff_t* f, uint32_t length) {
       str[length] = 0;
     }
 
-  return str;
+  return (char*)str;
   }
-/*}}}*/
+//}}}
 
-/*{{{*/
+//{{{
 static uint32_t mp4ff_read_mp4_descr_length (mp4ff_t* f) {
 
   uint8_t b;
@@ -210,25 +207,25 @@ static uint32_t mp4ff_read_mp4_descr_length (mp4ff_t* f) {
 
   return length;
   }
-/*}}}*/
-/*}}}*/
-/*{{{  write utils*/
-/*{{{*/
+//}}}
+//}}}
+//{{{  write utils
+//{{{
 static int32_t mp4ff_truncate (mp4ff_t* f) {
 
   return f->stream->truncate (f->stream->user_data);
   }
-/*}}}*/
-/*{{{*/
-static int32_t mp4ff_write_data (mp4ff_t* f, int8_t* data, uint32_t size) {
+//}}}
+//{{{
+static int32_t mp4ff_write_data (mp4ff_t* f, uint8_t* data, uint32_t size) {
 
   int32_t result = 1;
   result = f->stream->write (f->stream->user_data, data, size);
   f->current_position += size;
   return result;
   }
-/*}}}*/
-/*{{{*/
+//}}}
+//{{{
 static int32_t mp4ff_write_int32 (mp4ff_t* f, const uint32_t data) {
 
   uint32_t result;
@@ -236,20 +233,20 @@ static int32_t mp4ff_write_int32 (mp4ff_t* f, const uint32_t data) {
   int8_t temp[4];
 
   *(uint32_t*)temp = data;
-  a = (uint8_t)temp[0];
-  b = (uint8_t)temp[1];
-  c = (uint8_t)temp[2];
-  d = (uint8_t)temp[3];
+  a = temp[0];
+  b = temp[1];
+  c = temp[2];
+  d = temp[3];
 
   result = (a<<24) | (b<<16) | (c<<8) | d;
 
   return mp4ff_write_data (f, (uint8_t*)&result, sizeof (result));
   }
-/*}}}*/
-/*}}}*/
-/*{{{  parse utils*/
-/*{{{*/
-static bool mp4ff_atom_compare (int8_t* ch1, int8_t* ch2) {
+//}}}
+//}}}
+//{{{  parse utils
+//{{{
+static bool mp4ff_atom_compare (uint8_t* ch1, char* ch2) {
 // compare 2 atom names, returns 1 for equal, 0 for unequal
 
   for (int i = 0; i < 4; i++)
@@ -258,9 +255,9 @@ static bool mp4ff_atom_compare (int8_t* ch1, int8_t* ch2) {
 
   return true;
   }
-/*}}}*/
-/*{{{*/
-static uint8_t mp4ff_atom_name_to_type (int8_t* fourChars) {
+//}}}
+//{{{
+static uint8_t mp4ff_atom_name_to_type (uint8_t* fourChars) {
 
   if (mp4ff_atom_compare (fourChars, "moov")) return ATOM_MOOV;
   else if (mp4ff_atom_compare (fourChars, "minf")) return ATOM_MINF;
@@ -336,25 +333,25 @@ static uint8_t mp4ff_atom_name_to_type (int8_t* fourChars) {
   else
     return ATOM_UNKNOWN;
   }
-/*}}}*/
+//}}}
 
-/*{{{*/
+//{{{
 static uint64_t mp4ff_atom_read_header (mp4ff_t* f, uint8_t* atom_type, uint8_t* header_size, int indent)  {
 // read atom header, return atom size, atom size is with header included
 
   if (f->debug)
     printf ("%8lld ", mp4ff_position (f));
 
-  int8_t atom_header[8];
+  uint8_t atom_header[8];
   int32_t ret = mp4ff_read_data (f, atom_header, 8);
   if (ret != 8)
     return 0;
 
   // get atom size
-  uint64_t size = ((uint8_t)atom_header[0]) << 24;
-  size |= ((uint8_t)atom_header[1]) << 16;
-  size |= ((uint8_t)atom_header[2]) << 8;
-  size |= (uint8_t)atom_header[3];
+  uint64_t size = (atom_header[0]) << 24;
+  size |= (atom_header[1]) << 16;
+  size |= (atom_header[2]) << 8;
+  size |= atom_header[3];
 
   if (size == 1) {
     // 64 bit atom size
@@ -375,10 +372,10 @@ static uint64_t mp4ff_atom_read_header (mp4ff_t* f, uint8_t* atom_type, uint8_t*
 
   return size;
   }
-/*}}}*/
-/*}}}*/
-/*{{{  meta utils*/
-/*{{{*/
+//}}}
+//}}}
+//{{{  meta utils
+//{{{
 static int32_t mp4ff_tag_add_field (mp4ff_metadata_t* tags, const char* item, const char* value)
 {
     void* backup = (void *)tags->tags;
@@ -407,8 +404,8 @@ static int32_t mp4ff_tag_add_field (mp4ff_metadata_t* tags, const char* item, co
         return 1;
     }
 }
-/*}}}*/
-/*{{{*/
+//}}}
+//{{{
 static int32_t mp4ff_tag_set_field (mp4ff_metadata_t* tags, const char* item, const char* value)
 {
     unsigned int i;
@@ -427,9 +424,9 @@ static int32_t mp4ff_tag_set_field (mp4ff_metadata_t* tags, const char* item, co
 
     return mp4ff_tag_add_field(tags, item, value);
 }
-/*}}}*/
+//}}}
 
-/*{{{*/
+//{{{
 static int32_t mp4ff_set_metadata_name (mp4ff_t* f, uint8_t atom_type, char* *name) {
 
     uint8_t tag_idx = 0;
@@ -472,8 +469,8 @@ static int32_t mp4ff_set_metadata_name (mp4ff_t* f, uint8_t atom_type, char* *na
 
   return 0;
   }
-/*}}}*/
-/*{{{*/
+//}}}
+//{{{
 static const char* mp4ff_meta_index_to_genre (uint32_t idx) {
 
   if (idx>0 && idx<=sizeof(ID3v1GenreList)/sizeof(ID3v1GenreList[0]))
@@ -481,9 +478,9 @@ static const char* mp4ff_meta_index_to_genre (uint32_t idx) {
   else
     return 0;
   }
-/*}}}*/
+//}}}
 
-/*{{{*/
+//{{{
 static int32_t mp4ff_parse_tag (mp4ff_t* f, uint8_t parent_atom_type, int32_t size) {
 
   uint8_t atom_type;
@@ -586,8 +583,8 @@ static int32_t mp4ff_parse_tag (mp4ff_t* f, uint8_t parent_atom_type, int32_t si
 
   return 1;
   }
-/*}}}*/
-/*{{{*/
+//}}}
+//{{{
 static int32_t mp4ff_parse_metadata (mp4ff_t* f, int32_t size, int indent) {
 
   uint64_t subsize, sumsize = 0;
@@ -604,9 +601,9 @@ static int32_t mp4ff_parse_metadata (mp4ff_t* f, int32_t size, int indent) {
 
   return 0;
   }
-/*}}}*/
+//}}}
 
-/*{{{*/
+//{{{
 /* find a metadata item by name */
 /* returns 0 if item found, 1 if no such item */
 static int32_t mp4ff_meta_find_by_name (const mp4ff_t* f, const char* item, char** value) {
@@ -625,42 +622,42 @@ static int32_t mp4ff_meta_find_by_name (const mp4ff_t* f, const char* item, char
   /* not found */
   return 0;
   }
-/*}}}*/
+//}}}
 
-/*{{{*/
+//{{{
 static uint32_t fix_byte_order_32 (uint32_t src)
 {
     uint32_t result;
     uint32_t a, b, c, d;
-    int8_t data[4];
+    uint8_t data[4];
 
     memcpy(data,&src,sizeof(src));
-    a = (uint8_t)data[0];
-    b = (uint8_t)data[1];
-    c = (uint8_t)data[2];
-    d = (uint8_t)data[3];
+    a = data[0];
+    b = data[1];
+    c = data[2];
+    d = data[3];
 
     result = (a<<24) | (b<<16) | (c<<8) | d;
     return (uint32_t)result;
 }
-/*}}}*/
-/*{{{*/
+//}}}
+//{{{
 static uint16_t fix_byte_order_16 (uint16_t src)
 {
     uint16_t result;
     uint16_t a, b;
-    int8_t data[2];
+    uint8_t data[2];
 
     memcpy(data,&src,sizeof(src));
-    a = (uint8_t)data[0];
-    b = (uint8_t)data[1];
+    a = data[0];
+    b = data[1];
 
     result = (a<<8) | b;
     return (uint16_t)result;
 }
-/*}}}*/
+//}}}
 
-/*{{{*/
+//{{{
 static unsigned membuffer_write (membuffer * buf,const void * ptr,unsigned bytes)
 {
   unsigned dest_size = buf->written + bytes;
@@ -690,101 +687,102 @@ static unsigned membuffer_write (membuffer * buf,const void * ptr,unsigned bytes
   buf->written += bytes;
   return bytes;
 }
-/*}}}*/
-/*{{{*/
+//}}}
+//{{{
 static unsigned membuffer_write_int32 (membuffer* buf, uint32_t data)
 {
   uint8_t temp[4] = {(uint8_t)(data>>24),(uint8_t)(data>>16),(uint8_t)(data>>8),(uint8_t)data};
   return membuffer_write(buf,temp,4);
 }
-/*}}}*/
-/*{{{*/
+//}}}
+//{{{
 static unsigned membuffer_write_int24 (membuffer* buf, uint32_t data)
 {
   uint8_t temp[3] = {(uint8_t)(data>>16),(uint8_t)(data>>8),(uint8_t)data};
   return membuffer_write(buf,temp,3);
 }
-/*}}}*/
-/*{{{*/
+//}}}
+//{{{
 static unsigned membuffer_write_int16 (membuffer* buf, uint16_t data)
 {
   uint8_t temp[2] = {(uint8_t)(data>>8),(uint8_t)data};
   return membuffer_write(buf,temp,2);
 }
-/*}}}*/
-/*{{{*/
+//}}}
+//{{{
 static unsigned membuffer_write_atom_name (membuffer* buf, const char * data)
 {
   return membuffer_write(buf,data,4)==4 ? 1 : 0;
 }
-/*}}}*/
-/*{{{*/
+//}}}
+//{{{
 static void membuffer_write_atom (membuffer* buf, const char* name, unsigned size, const void* data)
 {
   membuffer_write_int32(buf,size + 8);
   membuffer_write_atom_name(buf,name);
   membuffer_write(buf,data,size);
 }
-/*}}}*/
-/*{{{*/
+//}}}
+//{{{
 static unsigned membuffer_write_string (membuffer* buf, const char* data)
 {
   return membuffer_write(buf,data,strlen(data));
 }
-/*}}}*/
-/*{{{*/
+//}}}
+//{{{
 static unsigned membuffer_write_int8 (membuffer* buf, uint8_t data)
 {
   return membuffer_write(buf,&data,1);
 }
-/*}}}*/
+//}}}
 
-/*{{{*/
+//{{{
 static void* membuffer_get_ptr (const membuffer* buf)
 {
   return buf->data;
 }
-/*}}}*/
-/*{{{*/
+//}}}
+//{{{
 static unsigned membuffer_get_size (const membuffer* buf)
 {
   return buf->written;
 }
-/*}}}*/
+//}}}
 
-/*{{{*/
+//{{{
 static unsigned membuffer_error (const membuffer* buf)
 {
   return buf->error;
 }
-/*}}}*/
-/*{{{*/
+//}}}
+//{{{
 static void membuffer_set_error(membuffer* buf) {
   buf->error = 1;
   }
-/*}}}*/
-/*{{{*/
+//}}}
+//{{{
 static unsigned membuffer_transfer_from_file (membuffer* buf, mp4ff_t* src, unsigned bytes)
 {
   unsigned oldsize;
   void * bufptr;
 
   oldsize = membuffer_get_size(buf);
-  if (membuffer_write(buf,0,bytes) != bytes) return 0;
+  if (membuffer_write(buf,0,bytes) != bytes) 
+    return 0;
 
   bufptr = membuffer_get_ptr(buf);
-  if (bufptr==0) return 0;
+  if (bufptr==0) 
+    return 0;
 
-  if ((unsigned)mp4ff_read_data (src, (char*)bufptr + oldsize,bytes) != bytes)
-  {
+  if ((unsigned)mp4ff_read_data (src, (uint8_t*)bufptr + oldsize,bytes) != bytes) {
     membuffer_set_error(buf);
     return 0;
-  }
+    }
 
   return bytes;
 }
-/*}}}*/
-/*{{{*/
+//}}}
+//{{{
 static membuffer * membuffer_create()
 {
   const unsigned initial_size = 256;
@@ -797,15 +795,15 @@ static membuffer * membuffer_create()
 
   return buf;
 }
-/*}}}*/
-/*{{{*/
+//}}}
+//{{{
 static void membuffer_free (membuffer* buf)
 {
   if (buf->data) free(buf->data);
   free(buf);
 }
-/*}}}*/
-/*{{{*/
+//}}}
+//{{{
 static void* membuffer_detach (membuffer* buf)
 {
   void * ret;
@@ -821,9 +819,9 @@ static void* membuffer_detach (membuffer* buf)
 
   return ret;
 }
-/*}}}*/
+//}}}
 
-/*{{{*/
+//{{{
 static const char* find_standard_meta (const char* name) // returns atom name if found, 0 if not
 {
   unsigned n;
@@ -833,8 +831,8 @@ static const char* find_standard_meta (const char* name) // returns atom name if
   }
     return 0;
 }
-/*}}}*/
-/*{{{*/
+//}}}
+//{{{
 static void membuffer_write_track_tag (membuffer* buf, const char* name, uint32_t index, uint32_t total)
 {
   membuffer_write_int32(buf,8 /*atom header*/ + 8 /*data atom header*/ + 8 /*flags + reserved*/ + 8 /*actual data*/ );
@@ -848,8 +846,8 @@ static void membuffer_write_track_tag (membuffer* buf, const char* name, uint32_
   membuffer_write_int16(buf,(uint16_t)total);//total tracks
   membuffer_write_int16(buf,0);
 }
-/*}}}*/
-/*{{{*/
+//}}}
+//{{{
 static void membuffer_write_int16_tag (membuffer* buf, const char* name, uint16_t value)
 {
   membuffer_write_int32(buf,8 /*atom header*/ + 8 /*data atom header*/ + 8 /*flags + reserved*/ + 2 /*actual data*/ );
@@ -860,8 +858,8 @@ static void membuffer_write_int16_tag (membuffer* buf, const char* name, uint16_
   membuffer_write_int32(buf,0);//reserved
   membuffer_write_int16(buf,value);//value
 }
-/*}}}*/
-/*{{{*/
+//}}}
+//{{{
 static void membuffer_write_std_tag (membuffer* buf, const char* name, const char* value)
 {
   /* added by AJS */
@@ -881,8 +879,8 @@ static void membuffer_write_std_tag (membuffer* buf, const char* name, const cha
   membuffer_write_int32(buf,0);//reserved
   membuffer_write(buf,value,strlen(value));
 }
-/*}}}*/
-/*{{{*/
+//}}}
+//{{{
 static void membuffer_write_custom_tag (membuffer* buf, const char* name, const char* value)
 {
   membuffer_write_int32(buf,8 /*atom header*/ + 0x1C /*weirdo itunes atom*/ + 12 /*name atom header*/ + strlen(name) + 16 /*data atom header + flags*/ + strlen(value) );
@@ -902,15 +900,15 @@ static void membuffer_write_custom_tag (membuffer* buf, const char* name, const 
   membuffer_write(buf,value,strlen(value));
 
 }
-/*}}}*/
-/*{{{*/
+//}}}
+//{{{
 static uint32_t myatoi (const char * param)
 {
   return param ? atoi(param) : 0;
 }
-/*}}}*/
+//}}}
 
-/*{{{*/
+//{{{
 static uint32_t mp4ff_meta_genre_to_index (const char* genrestr) {
 
   unsigned n;
@@ -919,8 +917,8 @@ static uint32_t mp4ff_meta_genre_to_index (const char* genrestr) {
       return n+1;
   return 0;
   }
-/*}}}*/
-/*{{{*/
+//}}}
+//{{{
 static uint32_t create_ilst (const mp4ff_metadata_t* data,void ** out_buffer, uint32_t* out_size)
 {
   membuffer * buf = membuffer_create();
@@ -1013,16 +1011,16 @@ static uint32_t create_ilst (const mp4ff_metadata_t* data,void ** out_buffer, ui
 
   return 1;
 }
-/*}}}*/
+//}}}
 
-/*{{{*/
+//{{{
 static uint32_t find_atom (mp4ff_t* f, uint64_t base, uint32_t size, const char* name)
 {
   uint32_t remaining = size;
   uint64_t atom_offset = base;
   for(;;)
   {
-    char atom_name[4];
+    uint8_t atom_name[4];
     uint32_t atom_size;
 
     mp4ff_set_position (f, atom_offset);
@@ -1030,7 +1028,7 @@ static uint32_t find_atom (mp4ff_t* f, uint64_t base, uint32_t size, const char*
     if (remaining < 8) break;
     atom_size = mp4ff_read_int32(f);
     if (atom_size > remaining || atom_size < 8) break;
-    mp4ff_read_data(f,atom_name,4);
+    mp4ff_read_data (f,atom_name,4);
 
     if (!memcmp(atom_name,name,4))
     {
@@ -1043,8 +1041,8 @@ static uint32_t find_atom (mp4ff_t* f, uint64_t base, uint32_t size, const char*
   }
   return 0;
 }
-/*}}}*/
-/*{{{*/
+//}}}
+//{{{
 static uint32_t find_atom_v2 (mp4ff_t* f,uint64_t base, uint32_t size, const char* name,
                               uint32_t extraheaders, const char* name_inside)
 {
@@ -1075,9 +1073,9 @@ static uint32_t find_atom_v2 (mp4ff_t* f,uint64_t base, uint32_t size, const cha
   }
   else return 0;
 }
-/*}}}*/
+//}}}
 
-/*{{{*/
+//{{{
 static uint32_t create_meta (const mp4ff_metadata_t * data, void ** out_buffer, uint32_t* out_size)
 {
   membuffer * buf;
@@ -1097,8 +1095,8 @@ static uint32_t create_meta (const mp4ff_metadata_t * data, void ** out_buffer, 
   membuffer_free(buf);
   return 1;
 }
-/*}}}*/
-/*{{{*/
+//}}}
+//{{{
 static uint32_t create_udta (const mp4ff_metadata_t * data, void ** out_buffer, uint32_t* out_size)
 {
   membuffer * buf;
@@ -1118,9 +1116,9 @@ static uint32_t create_udta (const mp4ff_metadata_t * data, void ** out_buffer, 
   membuffer_free(buf);
   return 1;
 }
-/*}}}*/
-/*{{{*/
-static uint32_t modify_moov (mp4ff_t* f, const mp4ff_metadata_t* data, void** out_buffer, uint32_t* out_size)
+//}}}
+//{{{
+static uint32_t modify_moov (mp4ff_t* f, const mp4ff_metadata_t* data, uint8_t** out_buffer, uint32_t* out_size)
 {
   uint64_t total_base = f->moov_offset + 8;
   uint32_t total_size = (uint32_t)(f->moov_size - 8);
@@ -1150,8 +1148,8 @@ static uint32_t modify_moov (mp4ff_t* f, const mp4ff_metadata_t* data, void** ou
 
     free(new_udta_buffer);
 
-    *out_size = membuffer_get_size(buf);
-    *out_buffer = membuffer_detach(buf);
+    *out_size = membuffer_get_size (buf);
+    *out_buffer = (uint8_t*)membuffer_detach (buf);
     membuffer_free(buf);
     return 1;
   }
@@ -1178,7 +1176,7 @@ static uint32_t modify_moov (mp4ff_t* f, const mp4ff_metadata_t* data, void** ou
       free(new_meta_buffer);
 
       *out_size = membuffer_get_size(buf);
-      *out_buffer = membuffer_detach(buf);
+      *out_buffer = (uint8_t*)membuffer_detach(buf);
       membuffer_free(buf);
       return 1;
     }
@@ -1193,7 +1191,7 @@ static uint32_t modify_moov (mp4ff_t* f, const mp4ff_metadata_t* data, void** ou
     size_delta = new_ilst_size - (ilst_size - 8);
 
     *out_size = total_size + size_delta;
-    *out_buffer = malloc(*out_size);
+    *out_buffer = (uint8_t*)malloc(*out_size);
     if (*out_buffer == 0)
     {
       free(new_ilst_buffer);
@@ -1224,10 +1222,10 @@ static uint32_t modify_moov (mp4ff_t* f, const mp4ff_metadata_t* data, void** ou
   return 1;
 
 }
-/*}}}*/
-/*}}}*/
-/*{{{  sample utils*/
-/*{{{*/
+//}}}
+//}}}
+//{{{  sample utils
+//{{{
 static int32_t mp4ff_chunk_of_sample (const mp4ff_t* f, int track, int sample,
                                       int32_t* chunk_sample, int32_t *chunk) {
 
@@ -1269,8 +1267,8 @@ static int32_t mp4ff_chunk_of_sample (const mp4ff_t* f, int track, int sample,
 
   return 0;
   }
-/*}}}*/
-/*{{{*/
+//}}}
+//{{{
 static int32_t mp4ff_chunk_to_offset (const mp4ff_t* f, int track, int32_t chunk) {
 
  const mp4ff_track_t* p_track = f->track[track];
@@ -1284,9 +1282,9 @@ static int32_t mp4ff_chunk_to_offset (const mp4ff_t* f, int track, int32_t chunk
 
   return 0;
   }
-/*}}}*/
+//}}}
 
-/*{{{*/
+//{{{
 static int32_t mp4ff_sample_range_size (const mp4ff_t* f, int track, int32_t chunk_sample, int sample) {
 
   int32_t total = 0;
@@ -1304,8 +1302,8 @@ static int32_t mp4ff_sample_range_size (const mp4ff_t* f, int track, int32_t chu
 
   return total;
   }
-/*}}}*/
-/*{{{*/
+//}}}
+//{{{
 static int32_t mp4ff_sample_to_offset (const mp4ff_t* f, int track, int sample) {
 
   int32_t chunk;
@@ -1317,9 +1315,9 @@ static int32_t mp4ff_sample_to_offset (const mp4ff_t* f, int track, int sample) 
 
   return chunk_offset2;
   }
-/*}}}*/
+//}}}
 
-/*{{{*/
+//{{{
 static int32_t mp4ff_audio_frame_size (const mp4ff_t* f, int track, int sample) {
 
   int32_t bytes;
@@ -1332,27 +1330,27 @@ static int32_t mp4ff_audio_frame_size (const mp4ff_t* f, int track, int sample) 
 
   return bytes;
   }
-/*}}}*/
-/*{{{*/
+//}}}
+//{{{
 static int32_t mp4ff_set_sample_position (mp4ff_t* f, int track, int sample) {
 
   int32_t offset = mp4ff_sample_to_offset (f, track, sample);
   mp4ff_set_position (f, offset);
   return 0;
   }
-/*}}}*/
-/*}}}*/
-/*{{{  atom utils*/
-/*{{{*/
+//}}}
+//}}}
+//{{{  atom utils
+//{{{
 static void mp4ff_track_add (mp4ff_t* f) {
 
   f->total_tracks++;
-  f->track[f->total_tracks - 1] = malloc (sizeof (mp4ff_track_t));
+  f->track[f->total_tracks - 1] = (mp4ff_track_t*)malloc (sizeof (mp4ff_track_t));
   memset (f->track[f->total_tracks - 1], 0, sizeof (mp4ff_track_t));
   }
-/*}}}*/
+//}}}
 
-/*{{{*/
+//{{{
 static int32_t mp4ff_read_stsz (mp4ff_t* f) {
 
   mp4ff_read_char (f); /* version */
@@ -1372,8 +1370,8 @@ static int32_t mp4ff_read_stsz (mp4ff_t* f) {
 
   return 0;
   }
-/*}}}*/
-/*{{{*/
+//}}}
+//{{{
 static int32_t mp4ff_read_esds (mp4ff_t* f) {
 
   mp4ff_read_char (f); /* version */
@@ -1415,7 +1413,7 @@ static int32_t mp4ff_read_esds (mp4ff_t* f) {
 
   if (f->track[f->total_tracks - 1]->decoderConfig)
     free(f->track[f->total_tracks - 1]->decoderConfig);
-  f->track[f->total_tracks - 1]->decoderConfig = malloc (f->track[f->total_tracks - 1]->decoderConfigLen);
+  f->track[f->total_tracks - 1]->decoderConfig = (uint8_t*)malloc (f->track[f->total_tracks - 1]->decoderConfigLen);
 
   if (f->track[f->total_tracks - 1]->decoderConfig)
     mp4ff_read_data (f, f->track[f->total_tracks - 1]->decoderConfig, f->track[f->total_tracks - 1]->decoderConfigLen);
@@ -1425,8 +1423,8 @@ static int32_t mp4ff_read_esds (mp4ff_t* f) {
   // skip remainder of atom
   return 0;
   }
-/*}}}*/
-/*{{{*/
+//}}}
+//{{{
 static int32_t mp4ff_read_stsc (mp4ff_t* f) {
 
   mp4ff_read_char (f); /* version */
@@ -1449,8 +1447,8 @@ static int32_t mp4ff_read_stsc (mp4ff_t* f) {
 
   return 0;
   }
-/*}}}*/
-/*{{{*/
+//}}}
+//{{{
 static int32_t mp4ff_read_stco (mp4ff_t* f) {
 
   mp4ff_read_char (f); /* version */
@@ -1465,8 +1463,8 @@ static int32_t mp4ff_read_stco (mp4ff_t* f) {
 
   return 0;
   }
-/*}}}*/
-/*{{{*/
+//}}}
+//{{{
 static int32_t mp4ff_read_ctts (mp4ff_t* f) {
 
   mp4ff_track_t* p_track = f->track[f->total_tracks - 1];
@@ -1501,8 +1499,8 @@ static int32_t mp4ff_read_ctts (mp4ff_t* f) {
     return 1;
     }
   }
-/*}}}*/
-/*{{{*/
+//}}}
+//{{{
 static int32_t mp4ff_read_stts (mp4ff_t* f) {
 
   mp4ff_track_t * p_track = f->track[f->total_tracks - 1];
@@ -1535,8 +1533,8 @@ static int32_t mp4ff_read_stts (mp4ff_t* f) {
     return 1;
     }
   }
-/*}}}*/
-/*{{{*/
+//}}}
+//{{{
 static int32_t mp4ff_read_mvhd (mp4ff_t* f) {
 
   mp4ff_read_char(f); /* version */
@@ -1567,8 +1565,8 @@ static int32_t mp4ff_read_mvhd (mp4ff_t* f) {
 
   return 0;
   }
-/*}}}*/
-/*{{{*/
+//}}}
+//{{{
 static int32_t mp4ff_read_tkhd (mp4ff_t* f) {
 
   uint8_t version = mp4ff_read_char (f); /* version */
@@ -1613,8 +1611,8 @@ static int32_t mp4ff_read_tkhd (mp4ff_t* f) {
   mp4ff_read_int32 (f); // height
   return 1;
   }
-/*}}}*/
-/*{{{*/
+//}}}
+//{{{
 static int32_t mp4ff_read_mdhd (mp4ff_t* f) {
 
   uint32_t version = mp4ff_read_int32 (f);
@@ -1636,9 +1634,9 @@ static int32_t mp4ff_read_mdhd (mp4ff_t* f) {
   mp4ff_read_int16(f);
   return 1;
   }
-/*}}}*/
+//}}}
 
-/*{{{*/
+//{{{
 static int32_t mp4ff_read_mp4a (mp4ff_t* f, int indent) {
 
   for (int i = 0; i < 6; i++)
@@ -1666,8 +1664,8 @@ static int32_t mp4ff_read_mp4a (mp4ff_t* f, int indent) {
 
   return 0;
   }
-/*}}}*/
-/*{{{*/
+//}}}
+//{{{
 static int32_t mp4ff_read_meta (mp4ff_t* f, uint64_t size, int indent) {
 
   mp4ff_read_char (f); /* version */
@@ -1689,8 +1687,8 @@ static int32_t mp4ff_read_meta (mp4ff_t* f, uint64_t size, int indent) {
 
   return 0;
   }
-/*}}}*/
-/*{{{*/
+//}}}
+//{{{
 static int32_t mp4ff_read_stsd (mp4ff_t* f, int indent) {
 
   mp4ff_read_char (f); /* version */
@@ -1721,9 +1719,9 @@ static int32_t mp4ff_read_stsd (mp4ff_t* f, int indent) {
 
   return 0;
   }
-/*}}}*/
+//}}}
 
-/*{{{*/
+//{{{
 static int32_t mp4ff_atom_read (mp4ff_t* f, int32_t size, uint8_t atom_type, int indent) {
 
   uint64_t dest_position = mp4ff_position (f) + size - 8;
@@ -1750,9 +1748,9 @@ static int32_t mp4ff_atom_read (mp4ff_t* f, int32_t size, uint8_t atom_type, int
   mp4ff_set_position (f, dest_position);
   return 0;
   }
-/*}}}*/
+//}}}
 
-/*{{{*/
+//{{{
 static int32_t parseSubAtoms (mp4ff_t* f, const uint64_t total_size, int indent) {
 // parse atoms that are sub atoms of other atoms
 
@@ -1769,7 +1767,7 @@ static int32_t parseSubAtoms (mp4ff_t* f, const uint64_t total_size, int indent)
     if (atom_type == ATOM_TRAK) {
       // new track
       f->total_tracks++;
-      f->track[f->total_tracks - 1] = malloc (sizeof (mp4ff_track_t));
+      f->track[f->total_tracks - 1] = (mp4ff_track_t*)malloc (sizeof (mp4ff_track_t));
       memset (f->track[f->total_tracks - 1], 0, sizeof (mp4ff_track_t));
       }
 
@@ -1781,8 +1779,8 @@ static int32_t parseSubAtoms (mp4ff_t* f, const uint64_t total_size, int indent)
 
   return 0;
   }
-/*}}}*/
-/*{{{*/
+//}}}
+//{{{
 static int32_t parseAtoms (mp4ff_t* f) {
 // parse root atoms
 
@@ -1819,13 +1817,13 @@ static int32_t parseAtoms (mp4ff_t* f) {
 
   return 0;
   }
-/*}}}*/
-/*}}}*/
+//}}}
+//}}}
 
-/*{{{*/
+//{{{
 mp4ff_t* mp4ff_open (mp4ff_callback_t* streamCallbacks, bool debug) {
 
-  mp4ff_t* ff = malloc (sizeof (mp4ff_t));
+  mp4ff_t* ff = (mp4ff_t*)malloc (sizeof (mp4ff_t));
   memset (ff, 0, sizeof (mp4ff_t));
 
   ff->debug = debug;;
@@ -1834,8 +1832,8 @@ mp4ff_t* mp4ff_open (mp4ff_callback_t* streamCallbacks, bool debug) {
 
   return ff;
   }
-/*}}}*/
-/*{{{*/
+//}}}
+//{{{
 void mp4ff_close (mp4ff_t* ff) {
 
   for (int i = 0; i < ff->total_tracks; i++)
@@ -1861,43 +1859,43 @@ void mp4ff_close (mp4ff_t* ff) {
 
   free (ff);
   }
-/*}}}*/
+//}}}
 
-/*{{{*/
+//{{{
 int32_t mp4ff_total_tracks (const mp4ff_t* f) {
   return f->total_tracks;
   }
-/*}}}*/
+//}}}
 
 // per track gets
-/*{{{*/
+//{{{
 int32_t mp4ff_get_track_type (const mp4ff_t* f, int track) {
   return f->track[track]->type;
   }
-/*}}}*/
-/*{{{*/
+//}}}
+//{{{
 int32_t mp4ff_time_scale (const mp4ff_t* f, int track) {
   return f->track[track]->timeScale;
   }
-/*}}}*/
+//}}}
 
-/*{{{*/
+//{{{
 uint32_t mp4ff_get_avg_bitrate (const mp4ff_t* f, int track) {
   return f->track[track]->avgBitrate;
   }
-/*}}}*/
-/*{{{*/
+//}}}
+//{{{
 uint32_t mp4ff_get_max_bitrate (const mp4ff_t* f, int track) {
   return f->track[track]->maxBitrate;
   }
-/*}}}*/
+//}}}
 
-/*{{{*/
+//{{{
 int64_t mp4ff_get_track_duration (const mp4ff_t* f, int track) {
   return f->track[track]->duration;
   }
-/*}}}*/
-/*{{{*/
+//}}}
+//{{{
 int64_t mp4ff_get_track_duration_use_offsets (const mp4ff_t* f, int track) {
 
   int64_t duration = mp4ff_get_track_duration(f,track);
@@ -1911,14 +1909,14 @@ int64_t mp4ff_get_track_duration_use_offsets (const mp4ff_t* f, int track) {
 
   return duration;
   }
-/*}}}*/
+//}}}
 
-/*{{{*/
+//{{{
 uint32_t mp4ff_get_audio_type (const mp4ff_t* f, int track) {
   return f->track[track]->audioType;
   }
-/*}}}*/
-/*{{{*/
+//}}}
+//{{{
 int32_t mp4ff_num_samples (const mp4ff_t* f, int track) {
 
   int32_t total = 0;
@@ -1926,19 +1924,19 @@ int32_t mp4ff_num_samples (const mp4ff_t* f, int track) {
     total += f->track[track]->stts_sample_count[i];
   return total;
   }
-/*}}}*/
-/*{{{*/
+//}}}
+//{{{
 uint32_t mp4ff_get_sample_rate (const mp4ff_t* f, int track) {
   return f->track[track]->sampleRate;
   }
-/*}}}*/
-/*{{{*/
+//}}}
+//{{{
 uint32_t mp4ff_get_channel_count (const mp4ff_t* f, int track) {
   return f->track[track]->channelCount;
   }
-/*}}}*/
+//}}}
 
-/*{{{*/
+//{{{
 int32_t mp4ff_get_decoder_config (const mp4ff_t* f, int track, uint8_t** ppBuf, uint32_t* pBufSize) {
 
   if (track >= f->total_tracks) {
@@ -1953,7 +1951,7 @@ int32_t mp4ff_get_decoder_config (const mp4ff_t* f, int track, uint8_t** ppBuf, 
     }
 
   else {
-    *ppBuf = malloc (f->track[track]->decoderConfigLen);
+    *ppBuf = (uint8_t*)malloc (f->track[track]->decoderConfigLen);
     if (*ppBuf == NULL) {
       *pBufSize = 0;
       return 1;
@@ -1965,9 +1963,9 @@ int32_t mp4ff_get_decoder_config (const mp4ff_t* f, int track, uint8_t** ppBuf, 
 
   return 0;
   }
-/*}}}*/
+//}}}
 
-/*{{{*/
+//{{{
 int32_t mp4ff_get_sample_duration_use_offsets (const mp4ff_t* f, int track, int sample) {
 
   int32_t d = mp4ff_get_sample_duration (f, track, sample);
@@ -1981,8 +1979,8 @@ int32_t mp4ff_get_sample_duration_use_offsets (const mp4ff_t* f, int track, int 
 
   return d;
   }
-/*}}}*/
-/*{{{*/
+//}}}
+//{{{
 int32_t mp4ff_get_sample_duration (const mp4ff_t* f, int track, int sample) {
 
   int32_t co = 0;
@@ -1996,8 +1994,8 @@ int32_t mp4ff_get_sample_duration (const mp4ff_t* f, int track, int sample) {
 
   return (int32_t)(-1);
   }
-/*}}}*/
-/*{{{*/
+//}}}
+//{{{
 int64_t mp4ff_get_sample_position (const mp4ff_t* f, int track, int sample) {
 
   int32_t i, co = 0;
@@ -2016,8 +2014,8 @@ int64_t mp4ff_get_sample_position (const mp4ff_t* f, int track, int sample) {
 
   return (int64_t)(-1);
   }
-/*}}}*/
-/*{{{*/
+//}}}
+//{{{
 int32_t mp4ff_get_sample_offset (const mp4ff_t* f, int track, int sample) {
 
   int32_t co = 0;
@@ -2030,9 +2028,9 @@ int32_t mp4ff_get_sample_offset (const mp4ff_t* f, int track, int sample) {
 
   return 0;
   }
-/*}}}*/
+//}}}
 
-/*{{{*/
+//{{{
 int32_t mp4ff_find_sample (const mp4ff_t* f, int track, int64_t offset, int32_t* toskip) {
 
 
@@ -2057,14 +2055,14 @@ int32_t mp4ff_find_sample (const mp4ff_t* f, int track, int64_t offset, int32_t*
 
   return (int32_t)(-1);
   }
-/*}}}*/
-/*{{{*/
+//}}}
+//{{{
 int32_t mp4ff_find_sample_use_offsets (const mp4ff_t* f, int track, int64_t offset, int32_t* toskip) {
   return mp4ff_find_sample (f, track, offset + mp4ff_get_sample_offset (f, track, 0), toskip);
   }
-/*}}}*/
+//}}}
 
-/*{{{*/
+//{{{
 int32_t mp4ff_read_sample_size (mp4ff_t* f, int track, int sample) {
 
   int32_t temp = mp4ff_audio_frame_size (f, track, sample);
@@ -2072,8 +2070,8 @@ int32_t mp4ff_read_sample_size (mp4ff_t* f, int track, int sample) {
     temp = 0;
   return temp;
   }
-/*}}}*/
-/*{{{*/
+//}}}
+//{{{
 int32_t mp4ff_read_sample (mp4ff_t* f, int track, int sample, uint8_t* buffer) {
 
   int32_t size = mp4ff_audio_frame_size (f, track, sample);
@@ -2083,97 +2081,97 @@ int32_t mp4ff_read_sample (mp4ff_t* f, int track, int sample, uint8_t* buffer) {
   mp4ff_set_sample_position (f, track, sample);
   return mp4ff_read_data (f, buffer, size);
   }
-/*}}}*/
+//}}}
 
-/*{{{  meta gets*/
-/*{{{*/
+//{{{  meta gets
+//{{{
 int32_t mp4ff_meta_get_title (const mp4ff_t* f, char** value) {
   return mp4ff_meta_find_by_name (f, "title", value);
   }
-/*}}}*/
-/*{{{*/
+//}}}
+//{{{
 int32_t mp4ff_meta_get_artist (const mp4ff_t *f, char** value) {
   return mp4ff_meta_find_by_name(f, "artist", value);
   }
-/*}}}*/
-/*{{{*/
+//}}}
+//{{{
 int32_t mp4ff_meta_get_writer (const mp4ff_t* f, char** value) {
   return mp4ff_meta_find_by_name(f, "writer", value);
   }
-/*}}}*/
-/*{{{*/
+//}}}
+//{{{
 int32_t mp4ff_meta_get_album (const mp4ff_t* f, char** value)
 {
     return mp4ff_meta_find_by_name(f, "album", value);
 }
-/*}}}*/
-/*{{{*/
+//}}}
+//{{{
 int32_t mp4ff_meta_get_date (const mp4ff_t* f, char* *value)
 {
     return mp4ff_meta_find_by_name(f, "date", value);
 }
-/*}}}*/
-/*{{{*/
+//}}}
+//{{{
 int32_t mp4ff_meta_get_tool (const mp4ff_t* f, char** value)
 {
     return mp4ff_meta_find_by_name(f, "tool", value);
 }
-/*}}}*/
-/*{{{*/
+//}}}
+//{{{
 int32_t mp4ff_meta_get_comment (const mp4ff_t* f, char** value)
 {
     return mp4ff_meta_find_by_name(f, "comment", value);
 }
-/*}}}*/
-/*{{{*/
+//}}}
+//{{{
 int32_t mp4ff_meta_get_genre (const mp4ff_t* f, char** value)
 {
     return mp4ff_meta_find_by_name(f, "genre", value);
 }
-/*}}}*/
-/*{{{*/
+//}}}
+//{{{
 int32_t mp4ff_meta_get_track (const mp4ff_t* f, char** value)
 {
     return mp4ff_meta_find_by_name(f, "track", value);
 }
-/*}}}*/
-/*{{{*/
+//}}}
+//{{{
 int32_t mp4ff_meta_get_totaltracks (const mp4ff_t* f, char** value)
 {
     return mp4ff_meta_find_by_name(f, "totaltracks", value);
 }
-/*}}}*/
-/*{{{*/
+//}}}
+//{{{
 int32_t mp4ff_meta_get_disc (const mp4ff_t* f, char** value)
 {
     return mp4ff_meta_find_by_name(f, "disc", value);
 }
-/*}}}*/
-/*{{{*/
+//}}}
+//{{{
 int32_t mp4ff_meta_get_totaldiscs (const mp4ff_t* f, char** value)
 {
     return mp4ff_meta_find_by_name(f, "totaldiscs", value);
 }
-/*}}}*/
-/*{{{*/
+//}}}
+//{{{
 int32_t mp4ff_meta_get_compilation (const mp4ff_t* f, char** value)
 {
     return mp4ff_meta_find_by_name(f, "compilation", value);
 }
-/*}}}*/
-/*{{{*/
+//}}}
+//{{{
 int32_t mp4ff_meta_get_tempo (const mp4ff_t* f, char** value)
 {
     return mp4ff_meta_find_by_name(f, "tempo", value);
 }
-/*}}}*/
-/*{{{*/
+//}}}
+//{{{
 int32_t mp4ff_meta_get_coverart (const mp4ff_t* f, char** value)
 {
     return mp4ff_meta_find_by_name(f, "cover", value);
 }
-/*}}}*/
-/*{{{*/
+//}}}
+//{{{
 int32_t mp4ff_meta_get_by_index (const mp4ff_t* f, uint32_t index, char** item, char** value) {
 
   if (index >= f->tags.count) {
@@ -2187,20 +2185,20 @@ int32_t mp4ff_meta_get_by_index (const mp4ff_t* f, uint32_t index, char** item, 
     return 1;
     }
   }
-/*}}}*/
+//}}}
 
-/*{{{*/
+//{{{
 int32_t mp4ff_meta_get_num_items (const mp4ff_t* f) {
   return f->tags.count;
   }
-/*}}}*/
-/*{{{*/
+//}}}
+//{{{
 int32_t mp4ff_meta_update (mp4ff_callback_t* f, const mp4ff_metadata_t* data) {
 
-  void* new_moov_data;
+  uint8_t* new_moov_data;
   uint32_t new_moov_size;
 
-  mp4ff_t* ff = malloc (sizeof (mp4ff_t));
+  mp4ff_t* ff = (mp4ff_t*)malloc (sizeof (mp4ff_t));
   memset (ff, 0, sizeof (mp4ff_t));
   ff->stream = f;
   mp4ff_set_position (ff, 0);
@@ -2214,22 +2212,22 @@ int32_t mp4ff_meta_update (mp4ff_callback_t* f, const mp4ff_metadata_t* data) {
 
   /* copy moov atom to end of the file */
   if (ff->last_atom != ATOM_MOOV) {
-    char *free_data = "free";
+    char* free_data = "free";
 
     /* rename old moov to free */
     mp4ff_set_position (ff, ff->moov_offset + 4);
-    mp4ff_write_data (ff, free_data, 4);
+    mp4ff_write_data (ff, (uint8_t*)free_data, 4);
 
     mp4ff_set_position (ff, ff->file_size);
     mp4ff_write_int32 (ff, new_moov_size + 8);
-    mp4ff_write_data (ff,"moov",4);
+    mp4ff_write_data (ff, (uint8_t*)"moov",4);
     mp4ff_write_data (ff, new_moov_data, new_moov_size);
     }
 
   else {
     mp4ff_set_position (ff, ff->moov_offset);
     mp4ff_write_int32 (ff, new_moov_size + 8);
-    mp4ff_write_data (ff, "moov",4);
+    mp4ff_write_data (ff, (uint8_t*)"moov",4);
     mp4ff_write_data (ff, new_moov_data, new_moov_size);
     }
 
@@ -2238,5 +2236,5 @@ int32_t mp4ff_meta_update (mp4ff_callback_t* f, const mp4ff_metadata_t* data) {
 
   return 1;
   }
-/*}}}*/
-/*}}}*/
+//}}}
+//}}}

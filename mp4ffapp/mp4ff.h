@@ -193,7 +193,7 @@ typedef struct {
   } mp4ff_t;
 //}}}
 
-mp4ff_t* mp4ff_open (mp4ff_callback_t* f, bool debug);
+mp4ff_t* mp4ff_open (mp4ff_callback_t* streamCallbacks, bool debug);
 void mp4ff_close (mp4ff_t* f);
 
 int32_t mp4ff_get_sample_duration (const mp4ff_t* f, int track, int sample);
