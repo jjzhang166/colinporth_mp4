@@ -767,11 +767,11 @@ static unsigned membuffer_transfer_from_file (membuffer* buf, mp4ff_t* src, unsi
   void * bufptr;
 
   oldsize = membuffer_get_size(buf);
-  if (membuffer_write(buf,0,bytes) != bytes) 
+  if (membuffer_write(buf,0,bytes) != bytes)
     return 0;
 
   bufptr = membuffer_get_ptr(buf);
-  if (bufptr==0) 
+  if (bufptr==0)
     return 0;
 
   if ((unsigned)mp4ff_read_data (src, (uint8_t*)bufptr + oldsize,bytes) != bytes) {
@@ -1288,8 +1288,8 @@ static int32_t mp4ff_chunk_to_offset (const mp4ff_t* f, int track, int32_t chunk
 static int32_t mp4ff_sample_range_size (const mp4ff_t* f, int track, int32_t chunk_sample, int sample) {
 
   int32_t total = 0;
-  const mp4ff_track_t* p_track = f->track[track];
 
+  const mp4ff_track_t* p_track = f->track[track];
   if (p_track->stsz_sample_size)
     return (sample - chunk_sample) * p_track->stsz_sample_size;
   else {
@@ -1311,24 +1311,13 @@ static int32_t mp4ff_sample_to_offset (const mp4ff_t* f, int track, int sample) 
   mp4ff_chunk_of_sample (f, track, sample, &chunk_sample, &chunk);
 
   int32_t chunk_offset1 = mp4ff_chunk_to_offset (f, track, chunk);
-  int32_t chunk_offset2 = chunk_offset1 + mp4ff_sample_range_size (f, track, chunk_sample, sample);
-
-  return chunk_offset2;
+  return chunk_offset1 + mp4ff_sample_range_size (f, track, chunk_sample, sample);
   }
 //}}}
 
 //{{{
 static int32_t mp4ff_audio_frame_size (const mp4ff_t* f, int track, int sample) {
-
-  int32_t bytes;
-  const mp4ff_track_t * p_track = f->track[track];
-
-  if (p_track->stsz_sample_size)
-    bytes = p_track->stsz_sample_size;
-   else
-    bytes = p_track->stsz_table[sample];
-
-  return bytes;
+  return (f->track[track]->stsz_sample_size) ? f->track[track]->stsz_sample_size : f->track[track]->stsz_table[sample];
   }
 //}}}
 //{{{
@@ -1969,6 +1958,7 @@ int32_t mp4ff_get_decoder_config (const mp4ff_t* f, int track, uint8_t** ppBuf, 
 int32_t mp4ff_get_sample_duration_use_offsets (const mp4ff_t* f, int track, int sample) {
 
   int32_t d = mp4ff_get_sample_duration (f, track, sample);
+
   if (d != -1) {
     int32_t o = mp4ff_get_sample_offset (f, track, sample);
     if (o > d)
@@ -2091,85 +2081,73 @@ int32_t mp4ff_meta_get_title (const mp4ff_t* f, char** value) {
 //}}}
 //{{{
 int32_t mp4ff_meta_get_artist (const mp4ff_t *f, char** value) {
-  return mp4ff_meta_find_by_name(f, "artist", value);
+  return mp4ff_meta_find_by_name (f, "artist", value);
   }
 //}}}
 //{{{
 int32_t mp4ff_meta_get_writer (const mp4ff_t* f, char** value) {
-  return mp4ff_meta_find_by_name(f, "writer", value);
+  return mp4ff_meta_find_by_name (f, "writer", value);
   }
 //}}}
 //{{{
-int32_t mp4ff_meta_get_album (const mp4ff_t* f, char** value)
-{
-    return mp4ff_meta_find_by_name(f, "album", value);
-}
+int32_t mp4ff_meta_get_album (const mp4ff_t* f, char** value) {
+  return mp4ff_meta_find_by_name (f, "album", value);
+  }
 //}}}
 //{{{
-int32_t mp4ff_meta_get_date (const mp4ff_t* f, char* *value)
-{
-    return mp4ff_meta_find_by_name(f, "date", value);
-}
+int32_t mp4ff_meta_get_date (const mp4ff_t* f, char** value) {
+  return mp4ff_meta_find_by_name (f, "date", value);
+  }
 //}}}
 //{{{
-int32_t mp4ff_meta_get_tool (const mp4ff_t* f, char** value)
-{
-    return mp4ff_meta_find_by_name(f, "tool", value);
-}
+int32_t mp4ff_meta_get_tool (const mp4ff_t* f, char** value) {
+  return mp4ff_meta_find_by_name (f, "tool", value);
+  }
 //}}}
 //{{{
-int32_t mp4ff_meta_get_comment (const mp4ff_t* f, char** value)
-{
-    return mp4ff_meta_find_by_name(f, "comment", value);
-}
+int32_t mp4ff_meta_get_comment (const mp4ff_t* f, char** value) {
+  return mp4ff_meta_find_by_name (f, "comment", value);
+  }
 //}}}
 //{{{
-int32_t mp4ff_meta_get_genre (const mp4ff_t* f, char** value)
-{
-    return mp4ff_meta_find_by_name(f, "genre", value);
-}
+int32_t mp4ff_meta_get_genre (const mp4ff_t* f, char** value) {
+  return mp4ff_meta_find_by_name (f, "genre", value);
+  }
 //}}}
 //{{{
-int32_t mp4ff_meta_get_track (const mp4ff_t* f, char** value)
-{
-    return mp4ff_meta_find_by_name(f, "track", value);
-}
+int32_t mp4ff_meta_get_track (const mp4ff_t* f, char** value) {
+  return mp4ff_meta_find_by_name (f, "track", value);
+  }
 //}}}
 //{{{
-int32_t mp4ff_meta_get_totaltracks (const mp4ff_t* f, char** value)
-{
-    return mp4ff_meta_find_by_name(f, "totaltracks", value);
-}
+int32_t mp4ff_meta_get_totaltracks (const mp4ff_t* f, char** value) {
+  return mp4ff_meta_find_by_name (f, "totaltracks", value);
+  }
 //}}}
 //{{{
-int32_t mp4ff_meta_get_disc (const mp4ff_t* f, char** value)
-{
-    return mp4ff_meta_find_by_name(f, "disc", value);
-}
+int32_t mp4ff_meta_get_disc (const mp4ff_t* f, char** value) {
+  return mp4ff_meta_find_by_name (f, "disc", value);
+  }
 //}}}
 //{{{
-int32_t mp4ff_meta_get_totaldiscs (const mp4ff_t* f, char** value)
-{
-    return mp4ff_meta_find_by_name(f, "totaldiscs", value);
-}
+int32_t mp4ff_meta_get_totaldiscs (const mp4ff_t* f, char** value) {
+  return mp4ff_meta_find_by_name (f, "totaldiscs", value);
+  }
 //}}}
 //{{{
-int32_t mp4ff_meta_get_compilation (const mp4ff_t* f, char** value)
-{
-    return mp4ff_meta_find_by_name(f, "compilation", value);
-}
+int32_t mp4ff_meta_get_compilation (const mp4ff_t* f, char** value) {
+  return mp4ff_meta_find_by_name (f, "compilation", value);
+  }
 //}}}
 //{{{
-int32_t mp4ff_meta_get_tempo (const mp4ff_t* f, char** value)
-{
-    return mp4ff_meta_find_by_name(f, "tempo", value);
-}
+int32_t mp4ff_meta_get_tempo (const mp4ff_t* f, char** value) {
+  return mp4ff_meta_find_by_name (f, "tempo", value);
+  }
 //}}}
 //{{{
-int32_t mp4ff_meta_get_coverart (const mp4ff_t* f, char** value)
-{
-    return mp4ff_meta_find_by_name(f, "cover", value);
-}
+int32_t mp4ff_meta_get_coverart (const mp4ff_t* f, char** value) {
+  return mp4ff_meta_find_by_name (f, "cover", value);
+  }
 //}}}
 //{{{
 int32_t mp4ff_meta_get_by_index (const mp4ff_t* f, uint32_t index, char** item, char** value) {
@@ -2180,8 +2158,8 @@ int32_t mp4ff_meta_get_by_index (const mp4ff_t* f, uint32_t index, char** item, 
     return 0;
     }
   else {
-    *item = strdup(f->tags.tags[index].item);
-    *value = strdup(f->tags.tags[index].value);
+    *item = strdup (f->tags.tags[index].item);
+    *value = strdup (f->tags.tags[index].value);
     return 1;
     }
   }
