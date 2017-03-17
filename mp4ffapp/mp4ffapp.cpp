@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../mp4ff/mp4ff.h"
+#include "mp4ff.h"
 //}}}
 
 //{{{
