@@ -2,7 +2,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.26228.9
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mp4ffapp", "mp4ffapp\mp4ffapp.vcxproj", "{5909E22A-B089-4FC9-986E-C82DBEA633DA}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cMp4App", "mp4ffapp\mp4ffapp.vcxproj", "{5909E22A-B089-4FC9-986E-C82DBEA633DA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

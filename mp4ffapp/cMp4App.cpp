@@ -1,26 +1,15 @@
-// mp4ffapp.cpp
+// cMp4App.cpp
 //{{{  includes
 #define _CRT_SECURE_NO_WARNINGS
 #include <windows.h> // Sleep
 
-#include <fcntl.h>
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
+#include <fcntl.h>
 
 #include "cMp4.h"
-//}}}
-
-//{{{
-uint32_t seekCallback (void* user_data, uint64_t position) {
-  return fseek ((FILE*)user_data, (LONG)position, SEEK_SET);
-  }
-//}}}
-//{{{
-uint32_t readCallback (void* user_data, void* buffer, uint32_t length) {
-  return fread (buffer, 1, length, (FILE*)user_data);
-  }
 //}}}
 
 //{{{
@@ -29,7 +18,7 @@ int getAacTrack (cMp4* mp4) {
   // find AAC track
   int bestTrack = -1;
 
-  int numTracks = mp4->get_total_tracks();
+  int numTracks = mp4->getNumTracks();
   printf ("numTracks:%d\n", numTracks);
 
   for (int track = 0; track < numTracks; track++) {
