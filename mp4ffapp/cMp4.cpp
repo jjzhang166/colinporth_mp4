@@ -6,9 +6,6 @@
 #include <string.h>
 
 #include "cMp4.h"
-
-#define stricmp _stricmp
-#define strdup _strdup
 //}}}
 //{{{  eAtomType
 enum eAtomType {
@@ -411,7 +408,7 @@ int32_t cMp4::read_sample (int track, int sample, uint8_t* buffer) {
   if (size <= 0)
     return 0;
 
-  set_sample_position (track, sample);
+  setPosition (sample_to_offset (track, sample));
   return read_data (buffer, size);
   }
 //}}}
@@ -501,8 +498,8 @@ int32_t cMp4::meta_get_by_index (uint32_t index, char** item, char** value) {
     return 0;
     }
   else {
-    *item = strdup (tags.tags[index].item);
-    *value = strdup (tags.tags[index].value);
+    *item = _strdup (tags.tags[index].item);
+    *value = _strdup (tags.tags[index].value);
     return 1;
     }
   }
@@ -685,7 +682,7 @@ uint64_t cMp4::readAtomHeader (uint8_t* atom_type, uint8_t* header_size, int ind
   *atom_type = ATOM_UNKNOWN;
   atom_header[8] = 0;
   for (unsigned int n = 0; n < sizeof (kAtomLookup) / sizeof(atomLookup_t); n++)
-    if (!stricmp ((char*)&atom_header[4], kAtomLookup[n].atomName)) {
+    if (!_stricmp ((char*)&atom_header[4], kAtomLookup[n].atomName)) {
       *atom_type = kAtomLookup[n].atomType;
       break;
       }
@@ -741,8 +738,8 @@ int32_t cMp4::tag_add_field (metadata_t* tags, const char* item, const char* val
     return 0;
     }
   else {
-    tags->tags[tags->count].item = strdup(item);
-    tags->tags[tags->count].value = strdup(value);
+    tags->tags[tags->count].item = _strdup (item);
+    tags->tags[tags->count].value = _strdup (value);
 
     if (!tags->tags[tags->count].item || !tags->tags[tags->count].value) {
       free (tags->tags[tags->count].item);
@@ -764,9 +761,9 @@ int32_t cMp4::tag_set_field (metadata_t* tags, const char* item, const char* val
     return 0;
 
   for (unsigned int i = 0; i < tags->count; i++) {
-    if (!stricmp (tags->tags[i].item, item)) {
+    if (!_stricmp (tags->tags[i].item, item)) {
       free(tags->tags[i].value);
-      tags->tags[i].value = strdup (value);
+      tags->tags[i].value = _strdup (value);
       return 1;
       }
     }
@@ -814,7 +811,7 @@ int32_t cMp4::set_metadata_name (uint8_t atom_type, char* *name) {
     default: tag_idx = 0; break;
     }
 
-  *name = strdup(tag_names[tag_idx]);
+  *name = _strdup(tag_names[tag_idx]);
 
   return 0;
   }
@@ -957,8 +954,8 @@ int32_t cMp4::meta_find_by_name (const char* item, char** value) {
   uint32_t i;
 
   for (i = 0; i < tags.count; i++) {
-    if (!stricmp(tags.tags[i].item, item)) {
-      *value = strdup(tags.tags[i].value);
+    if (!_stricmp(tags.tags[i].item, item)) {
+      *value = _strdup(tags.tags[i].value);
       return 1;
       }
     }
@@ -1111,7 +1108,7 @@ const char* cMp4::find_standard_meta (const char* name) {
 // returns atom name if found, 0 if not
 
   for (unsigned int n = 0; n < sizeof (kStdMetas) / sizeof(stdMetaEntry_t); n++)
-    if (!stricmp (name, kStdMetas[n].name))
+    if (!_stricmp (name, kStdMetas[n].name))
       return kStdMetas[n].atom;
     return 0;
   }
@@ -1187,95 +1184,9 @@ uint32_t cMp4::meta_genre_to_index (const char* genrestr) {
 
   unsigned n;
   for (n = 0; n < sizeof (ID3v1GenreList)/sizeof(ID3v1GenreList[0]); n++)
-    if (!stricmp (genrestr,ID3v1GenreList[n]))
+    if (!_stricmp (genrestr,ID3v1GenreList[n]))
       return n+1;
   return 0;
-  }
-//}}}
-//{{{
-uint32_t cMp4::create_ilst (const metadata_t* data, void** out_buffer, uint32_t* out_size) {
-
-  membuffer* buf = membuffer_create();
-  unsigned metaptr;
-  char* mask = (char*)malloc (data->count);
-  memset (mask,0,data->count);
-  {
-    const char * tracknumber_ptr = 0, * totaltracks_ptr = 0;
-    const char * discnumber_ptr = 0, * totaldiscs_ptr = 0;
-    const char * genre_ptr = 0, * tempo_ptr = 0;
-    for (metaptr = 0; metaptr < data->count; metaptr++) {
-      tag_t * tag = &data->tags[metaptr];
-      if (!stricmp(tag->item,"tracknumber") || !stricmp(tag->item,"track")) {
-        if (tracknumber_ptr==0)
-          tracknumber_ptr = tag->value;
-        mask[metaptr] = 1;
-        }
-      else if (!stricmp(tag->item,"totaltracks")) {
-        if (totaltracks_ptr==0)
-          totaltracks_ptr = tag->value;
-        mask[metaptr] = 1;
-        }
-      else if (!stricmp(tag->item,"discnumber") || !stricmp(tag->item,"disc")) {
-        if (discnumber_ptr==0)
-          discnumber_ptr = tag->value;
-        mask[metaptr] = 1;
-        }
-      else if (!stricmp(tag->item,"totaldiscs")) {
-        if (totaldiscs_ptr==0)
-          totaldiscs_ptr = tag->value;
-        mask[metaptr] = 1;
-        }
-      else if (!stricmp(tag->item,"genre")) {
-        if (genre_ptr==0)
-          genre_ptr = tag->value;
-        mask[metaptr] = 1;
-        }
-      else if (!stricmp(tag->item,"tempo")) {
-        if (tempo_ptr==0)
-          tempo_ptr = tag->value;
-        mask[metaptr] = 1;
-        }
-      }
-
-    if (tracknumber_ptr)
-      membuffer_write_track_tag (buf, "trkn", myatoi(tracknumber_ptr), myatoi(totaltracks_ptr));
-    if (discnumber_ptr)
-      membuffer_write_track_tag (buf, "disk", myatoi(discnumber_ptr), myatoi(totaldiscs_ptr));
-    if (tempo_ptr)
-      membuffer_write_int16_tag (buf, "tmpo", (uint16_t)myatoi(tempo_ptr));
-
-    if (genre_ptr) {
-      uint32_t index = meta_genre_to_index(genre_ptr);
-      if (index==0)
-        membuffer_write_std_tag(buf,"©gen",genre_ptr);
-      else
-        membuffer_write_int16_tag(buf,"gnre",(uint16_t)index);
-      }
-    }
-
-  for(metaptr = 0; metaptr < data->count; metaptr++) {
-    if (!mask[metaptr]) {
-      tag_t * tag = &data->tags[metaptr];
-      const char * std_meta_atom = find_standard_meta(tag->item);
-      if (std_meta_atom)
-        membuffer_write_std_tag(buf,std_meta_atom,tag->value);
-      else
-        membuffer_write_custom_tag(buf,tag->item,tag->value);
-      }
-    }
-
-  free (mask);
-
-  if (membuffer_error (buf)) {
-    membuffer_free (buf);
-    return 0;
-    }
-
-  *out_size = membuffer_get_size (buf);
-  *out_buffer = membuffer_detach (buf);
-  membuffer_free (buf);
-
-  return 1;
   }
 //}}}
 
@@ -1345,6 +1256,92 @@ uint32_t cMp4::find_atom_v2 (uint64_t base, uint32_t size, const char* name,
 //}}}
 
 //{{{
+uint32_t cMp4::create_ilst (const metadata_t* data, void** out_buffer, uint32_t* out_size) {
+
+  membuffer* buf = membuffer_create();
+  unsigned metaptr;
+  char* mask = (char*)malloc (data->count);
+  memset (mask,0,data->count);
+  {
+    const char * tracknumber_ptr = 0, * totaltracks_ptr = 0;
+    const char * discnumber_ptr = 0, * totaldiscs_ptr = 0;
+    const char * genre_ptr = 0, * tempo_ptr = 0;
+    for (metaptr = 0; metaptr < data->count; metaptr++) {
+      tag_t * tag = &data->tags[metaptr];
+      if (!_stricmp(tag->item,"tracknumber") || !_stricmp(tag->item,"track")) {
+        if (tracknumber_ptr==0)
+          tracknumber_ptr = tag->value;
+        mask[metaptr] = 1;
+        }
+      else if (!_stricmp(tag->item,"totaltracks")) {
+        if (totaltracks_ptr==0)
+          totaltracks_ptr = tag->value;
+        mask[metaptr] = 1;
+        }
+      else if (!_stricmp(tag->item,"discnumber") || !_stricmp(tag->item,"disc")) {
+        if (discnumber_ptr==0)
+          discnumber_ptr = tag->value;
+        mask[metaptr] = 1;
+        }
+      else if (!_stricmp(tag->item,"totaldiscs")) {
+        if (totaldiscs_ptr==0)
+          totaldiscs_ptr = tag->value;
+        mask[metaptr] = 1;
+        }
+      else if (!_stricmp(tag->item,"genre")) {
+        if (genre_ptr==0)
+          genre_ptr = tag->value;
+        mask[metaptr] = 1;
+        }
+      else if (!_stricmp(tag->item,"tempo")) {
+        if (tempo_ptr==0)
+          tempo_ptr = tag->value;
+        mask[metaptr] = 1;
+        }
+      }
+
+    if (tracknumber_ptr)
+      membuffer_write_track_tag (buf, "trkn", myatoi (tracknumber_ptr), myatoi (totaltracks_ptr));
+    if (discnumber_ptr)
+      membuffer_write_track_tag (buf, "disk", myatoi (discnumber_ptr), myatoi (totaldiscs_ptr));
+    if (tempo_ptr)
+      membuffer_write_int16_tag (buf, "tmpo", (uint16_t)myatoi (tempo_ptr));
+
+    if (genre_ptr) {
+      uint32_t index = meta_genre_to_index (genre_ptr);
+      if (index == 0)
+        membuffer_write_std_tag (buf, "©gen", genre_ptr);
+      else
+        membuffer_write_int16_tag (buf, "gnre", (uint16_t)index);
+      }
+    }
+
+  for(metaptr = 0; metaptr < data->count; metaptr++) {
+    if (!mask[metaptr]) {
+      tag_t* tag = &data->tags[metaptr];
+      const char* std_meta_atom = find_standard_meta (tag->item);
+      if (std_meta_atom)
+        membuffer_write_std_tag (buf, std_meta_atom, tag->value);
+      else
+        membuffer_write_custom_tag (buf, tag->item, tag->value);
+      }
+    }
+
+  free (mask);
+
+  if (membuffer_error (buf)) {
+    membuffer_free (buf);
+    return 0;
+    }
+
+  *out_size = membuffer_get_size (buf);
+  *out_buffer = membuffer_detach (buf);
+  membuffer_free (buf);
+
+  return 1;
+  }
+//}}}
+//{{{
 uint32_t cMp4::create_meta (const metadata_t* data, void** out_buffer, uint32_t* out_size) {
 
   uint32_t ilst_size;
@@ -1389,7 +1386,7 @@ uint32_t cMp4::create_udta (const metadata_t* data, void** out_buffer, uint32_t*
   }
 //}}}
 //{{{
-uint32_t cMp4::modify_moov ( const metadata_t* data, uint8_t** out_buffer, uint32_t* out_size) {
+uint32_t cMp4::modify_moov (const metadata_t* data, uint8_t** out_buffer, uint32_t* out_size) {
 
   uint64_t total_base = moov_offset + 8;
   uint32_t total_size = (uint32_t)(moov_size - 8);
@@ -1503,34 +1500,41 @@ uint32_t cMp4::modify_moov ( const metadata_t* data, uint8_t** out_buffer, uint3
 //}}}
 //{{{  sample
 //{{{
-int32_t cMp4::chunk_of_sample (int track, int sample,  int32_t* chunk_sample, int32_t *chunk) {
+int32_t cMp4::audio_frame_size (int track, int sample) {
+  return tracks[track]->stsz_sample_size ? tracks[track]->stsz_sample_size : tracks[track]->stsz_table[sample];
+  }
+//}}}
 
-  int32_t total_entries = 0;
-  int32_t chunk2entry;
-  int32_t chunk1, chunk2, chunk1samples, range_samples, total = 0;
+//{{{
+bool cMp4::chunk_of_sample (int track, int sample, int32_t* chunk_sample, int32_t* chunk) {
 
-  if (tracks[track] == NULL)
-    return -1;
+  if (tracks[track] == NULL) {
+    //{{{  return false, and zeros
+    *chunk = 0;
+    *chunk_sample = 0;
+    return false;
+    }
+    //}}}
 
-  total_entries = tracks[track]->stsc_entry_count;
-
-  chunk1 = 1;
-  chunk1samples = 0;
-  chunk2entry = 0;
-
+  int32_t total_entries = tracks[track]->stsc_entry_count;
+  int32_t chunk1 = 1;
+  int32_t chunk1samples = 0;
+  int32_t chunk2entry = 0;
+  int32_t total = 0;
   do {
-    chunk2 = tracks[track]->stsc_first_chunk[chunk2entry];
+    int32_t chunk2 = tracks[track]->stsc_first_chunk[chunk2entry];
     *chunk = chunk2 - chunk1;
-    range_samples = *chunk * chunk1samples;
+    int32_t range_samples = *chunk * chunk1samples;
 
-    if (sample < total + range_samples) break;
+    if (sample < total + range_samples)
+      break;
 
     chunk1samples = tracks[track]->stsc_samples_per_chunk[chunk2entry];
     chunk1 = chunk2;
 
-    if(chunk2entry < total_entries) {
-        chunk2entry++;
-        total += range_samples;
+    if (chunk2entry < total_entries) {
+      chunk2entry++;
+      total += range_samples;
       }
     } while (chunk2entry < total_entries);
 
@@ -1541,7 +1545,7 @@ int32_t cMp4::chunk_of_sample (int track, int sample,  int32_t* chunk_sample, in
 
   *chunk_sample = total + (*chunk - chunk1) * chunk1samples;
 
-  return 0;
+  return true;
   }
 //}}}
 //{{{
@@ -1561,19 +1565,18 @@ int32_t cMp4::chunk_to_offset (int track, int32_t chunk) {
 //{{{
 int32_t cMp4::sample_range_size (int track, int32_t chunk_sample, int sample) {
 
-  int32_t total = 0;
-
   if (tracks[track]->stsz_sample_size)
     return (sample - chunk_sample) * tracks[track]->stsz_sample_size;
+
   else {
     if (sample >= tracks[track]->stsz_sample_count)
-      return 0;//error
+      return 0; //error
 
-    for (int32_t i = chunk_sample, total = 0; i < sample; i++)
+    int32_t total = 0;
+    for (int32_t i = chunk_sample; i < sample; i++)
       total += tracks[track]->stsz_table[i];
+    return total;
     }
-
-  return total;
   }
 //}}}
 //{{{
@@ -1582,22 +1585,7 @@ int32_t cMp4::sample_to_offset (int track, int sample) {
   int32_t chunk;
   int32_t chunk_sample;
   chunk_of_sample (track, sample, &chunk_sample, &chunk);
-
-  int32_t chunk_offset1 = chunk_to_offset (track, chunk);
-  return chunk_offset1 + sample_range_size (track, chunk_sample, sample);
-  }
-//}}}
-
-//{{{
-int32_t cMp4::audio_frame_size (int track, int sample) {
-  return tracks[track]->stsz_sample_size ? tracks[track]->stsz_sample_size : tracks[track]->stsz_table[sample];
-  }
-//}}}
-//{{{
-int32_t cMp4::set_sample_position (int track, int sample) {
-
-  setPosition (sample_to_offset (track, sample));
-  return 0;
+  return chunk_to_offset (track, chunk) + sample_range_size (track, chunk_sample, sample);
   }
 //}}}
 //}}}
@@ -1950,17 +1938,17 @@ int32_t cMp4::read_stsd (int indent) {
     skip += size;
 
     if (atom_type == ATOM_MP4A) {
-      tracks[numTracks - 1]->type = TRACK_AUDIO;
+      tracks[numTracks - 1]->type = eTRACK_AUDIO;
       read_mp4a (indent);
       }
     else if (atom_type == ATOM_MP4V)
-      tracks[numTracks - 1]->type = TRACK_VIDEO;
+      tracks[numTracks - 1]->type = eTRACK_VIDEO;
     else if (atom_type == ATOM_AVC1)
-      tracks[numTracks - 1]->type = TRACK_VIDEO;
+      tracks[numTracks - 1]->type = eTRACK_VIDEO;
     else if (atom_type == ATOM_MP4S)
-      tracks[numTracks - 1]->type = TRACK_SYSTEM;
+      tracks[numTracks - 1]->type = eTRACK_SYSTEM;
     else
-      tracks[numTracks - 1]->type = TRACK_UNKNOWN;
+      tracks[numTracks - 1]->type = eTRACK_UNKNOWN;
 
     setPosition (skip);
     }

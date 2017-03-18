@@ -1,16 +1,11 @@
 // cMp4.h
 #pragma once
 #include <stdint.h>
-//{{{  track defines
-#define TRACK_UNKNOWN 0
-
-#define TRACK_AUDIO   1
-#define TRACK_VIDEO   2
-#define TRACK_SYSTEM  3
-//}}}
 
 class cMp4 {
 public:
+  enum eTrackType { eTRACK_UNKNOWN, eTRACK_AUDIO, eTRACK_VIDEO, eTRACK_SYSTEM };
+
   cMp4 (FILE* file, bool debug);
   ~cMp4();
 
@@ -202,23 +197,23 @@ private:
 
   // more meta
   uint32_t meta_genre_to_index (const char* genrestr);
-  uint32_t create_ilst (const metadata_t* data,void ** out_buffer, uint32_t* out_size);
 
   uint32_t find_atom (uint64_t base, uint32_t size, const char* name);
-  uint32_t find_atom_v2 (uint64_t base, uint32_t size, const char* name,
-                                uint32_t extraheaders, const char* name_inside);
+  uint32_t find_atom_v2 (uint64_t base, uint32_t size, const char* name, uint32_t extraheaders, const char* name_inside);
 
+  uint32_t create_ilst (const metadata_t* data,void ** out_buffer, uint32_t* out_size);
   uint32_t create_meta (const metadata_t * data, void** out_buffer, uint32_t* out_size);
   uint32_t create_udta (const metadata_t * data, void** out_buffer, uint32_t* out_size);
   uint32_t modify_moov ( const metadata_t* data, uint8_t** out_buffer, uint32_t* out_size);
   //}}}
   //{{{  sample
-  int32_t chunk_of_sample (int track, int sample, int32_t* chunk_sample, int32_t *chunk);
+  int32_t audio_frame_size (int track, int sample);
+
+  bool chunk_of_sample (int track, int sample, int32_t* chunk_sample, int32_t *chunk);
   int32_t chunk_to_offset (int track, int32_t chunk);
+
   int32_t sample_range_size (int track, int32_t chunk_sample, int sample);
   int32_t sample_to_offset (int track, int sample);
-  int32_t audio_frame_size (int track, int sample);
-  int32_t set_sample_position (int track, int sample);
   //}}}
   //{{{  atom
   int32_t read_stsz();

@@ -13,32 +13,12 @@
 //}}}
 
 //{{{
-int getAacTrack (cMp4* mp4) {
-
-  // find AAC track
-  int bestTrack = -1;
-
-  int numTracks = mp4->getNumTracks();
-  printf ("numTracks:%d\n", numTracks);
-
-  for (int track = 0; track < numTracks; track++) {
-    printf ("- track:%d type:%d\n", track, mp4->get_track_type (track));
-    if (mp4->get_track_type (track) == TRACK_AUDIO)
-      bestTrack = track;
-    }
-
-  return bestTrack;
-  }
-//}}}
-
-//{{{
-const int adts_sample_rates[] = { 96000, 88200, 64000, 48000,
-                                  44100, 32000, 24000, 22050,
-                                  16000, 12000, 11025,  8000,
-                                   7350,     0,     0,     0 };
-//}}}
-//{{{
 int findAdtsSRIndex (int sampleRate) {
+
+  const int adts_sample_rates[] = { 96000, 88200, 64000, 48000,
+                                    44100, 32000, 24000, 22050,
+                                    16000, 12000, 11025,  8000,
+                                     7350,     0,     0,     0 };
 
   for (int i = 0; i < 16; i++)
     if (sampleRate == adts_sample_rates[i])
@@ -93,6 +73,25 @@ uint8_t* makeAdtsHeader (int frameSize) {
   data[6] += ((0x7FF << 2) & 0x3F);     /* 6b: adts_buffer_fullness */
                                         /* 2b: num_raw_data_blocks */
   return data;
+  }
+//}}}
+
+//{{{
+int getAacTrack (cMp4* mp4) {
+
+  // find AAC track
+  int bestTrack = -1;
+
+  int numTracks = mp4->getNumTracks();
+  printf ("numTracks:%d\n", numTracks);
+
+  for (int track = 0; track < numTracks; track++) {
+    printf ("- track:%d type:%d\n", track, mp4->get_track_type (track));
+    if (mp4->get_track_type (track) == cMp4::eTRACK_AUDIO)
+      bestTrack = track;
+    }
+
+  return bestTrack;
   }
 //}}}
 
