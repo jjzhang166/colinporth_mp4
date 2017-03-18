@@ -103,13 +103,13 @@ const atomLookup_t kAtomLookup[] = {
   "free", ATOM_UNKNOWN,
   };
 //}}}
-//{{{  stdMetaEntry const
+//{{{  standardMetaItem
 typedef struct {
   const char* atom;
   const char* name;
-  } stdMetaEntry_t;
+  } standardMetaItem_t;
 
-const stdMetaEntry_t kStdMetas[] = {
+const standardMetaItem_t kStandardMetaItems[] = {
   {"\xA9" "nam", "title"},
   {"\xA9" "ART", "artist"},
   {"\xA9" "wrt", "writer"},
@@ -243,24 +243,32 @@ cMp4::~cMp4() {
   }
 //}}}
 
-// per track gets
 //{{{
-int64_t cMp4::get_track_duration_use_offsets (int track) {
+int32_t cMp4::getAudioTrack() {
 
-  int64_t duration = get_track_duration (track);
-  if (duration != -1) {
-    int64_t offset = get_sample_offset (track, 0);
-    if (offset > duration)
-      duration = 0;
-    else
-      duration -= offset;
-    }
+  int32_t bestTrack = -1;
+  for (auto track = 0; track < numTracks; track++)
+    if (tracks[track]->type == eTrackAUDIO)
+      bestTrack = track;
 
-  return duration;
+  return bestTrack;
   }
 //}}}
 //{{{
-int32_t cMp4::get_num_samples (int track) {
+int32_t cMp4::getVideoTrack() {
+
+  int32_t bestTrack = -1;
+  for (auto track = 0; track < numTracks; track++)
+    if (tracks[track]->type == eTrackVIDEO)
+      bestTrack = track;
+
+  return bestTrack;
+  }
+//}}}
+
+// per track gets
+//{{{
+int32_t cMp4::getNumSamples (int track) {
 
   int32_t total = 0;
   for (int i = 0; i < tracks[track]->stts_entry_count; i++)
@@ -270,28 +278,28 @@ int32_t cMp4::get_num_samples (int track) {
   }
 //}}}
 //{{{
-int32_t cMp4::get_decoder_config (int track, uint8_t** ppBuf, uint32_t* pBufSize) {
+int32_t cMp4::getDecoderConfig (int track, uint8_t** buffer, uint32_t* bufferSize) {
 
   if (track >= numTracks) {
-    *ppBuf = NULL;
-    *pBufSize = 0;
+    *buffer = NULL;
+    *bufferSize = 0;
     return 1;
     }
 
   if (tracks[track]->decoderConfig == NULL || tracks[track]->decoderConfigLen == 0) {
-    *ppBuf = NULL;
-    *pBufSize = 0;
+    *buffer = NULL;
+    *bufferSize = 0;
     }
 
   else {
-    *ppBuf = (uint8_t*)malloc (tracks[track]->decoderConfigLen);
-    if (*ppBuf == NULL) {
-      *pBufSize = 0;
+    *buffer = (uint8_t*)malloc (tracks[track]->decoderConfigLen);
+    if (*buffer == NULL) {
+      *bufferSize = 0;
       return 1;
       }
 
-    memcpy (*ppBuf, tracks[track]->decoderConfig, tracks[track]->decoderConfigLen);
-    *pBufSize = tracks[track]->decoderConfigLen;
+    memcpy (*buffer, tracks[track]->decoderConfig, tracks[track]->decoderConfigLen);
+    *bufferSize = tracks[track]->decoderConfigLen;
     }
 
   return 0;
@@ -299,23 +307,7 @@ int32_t cMp4::get_decoder_config (int track, uint8_t** ppBuf, uint32_t* pBufSize
 //}}}
 
 //{{{
-int32_t cMp4::get_sample_duration_use_offsets (int track, int sample) {
-
-  int32_t duration = get_sample_duration (track, sample);
-
-  if (duration != -1) {
-    int32_t offset = get_sample_offset (track, sample);
-    if (offset > duration)
-      duration = 0;
-    else
-      duration -= offset;
-    }
-
-  return duration;
-  }
-//}}}
-//{{{
-int32_t cMp4::get_sample_duration (int track, int sample) {
+int32_t cMp4::getSampleDuration (int track, int sample) {
 
   int32_t co = 0;
 
@@ -330,7 +322,7 @@ int32_t cMp4::get_sample_duration (int track, int sample) {
   }
 //}}}
 //{{{
-int64_t cMp4::get_sample_position (int track, int sample) {
+int64_t cMp4::getSamplePosition (int track, int sample) {
 
   int32_t co = 0;
   int64_t acc = 0;
@@ -350,7 +342,7 @@ int64_t cMp4::get_sample_position (int track, int sample) {
   }
 //}}}
 //{{{
-int32_t cMp4::get_sample_offset (int track, int sample) {
+int32_t cMp4::getSampleOffset (int track, int sample) {
 
   int32_t co = 0;
   for (int32_t i = 0; i < tracks[track]->ctts_entry_count; i++) {
@@ -363,7 +355,6 @@ int32_t cMp4::get_sample_offset (int track, int sample) {
   return 0;
   }
 //}}}
-
 //{{{
 int32_t cMp4::find_sample (int track, int64_t offset, int32_t* toskip) {
 
@@ -388,28 +379,54 @@ int32_t cMp4::find_sample (int track, int64_t offset, int32_t* toskip) {
   return (int32_t)(-1);
   }
 //}}}
+
+//{{{
+int64_t cMp4::getTrackDurationUseOffsets (int track) {
+
+  int64_t duration = getTrackDuration (track);
+  if (duration != -1) {
+    int64_t offset = getSampleOffset (track, 0);
+    if (offset > duration)
+      duration = 0;
+    else
+      duration -= offset;
+    }
+
+  return duration;
+  }
+//}}}
+//{{{
+int32_t cMp4::getSampleDurationUseOffsets (int track, int sample) {
+
+  int32_t duration = getSampleDuration (track, sample);
+
+  if (duration != -1) {
+    int32_t offset = getSampleOffset (track, sample);
+    if (offset > duration)
+      duration = 0;
+    else
+      duration -= offset;
+    }
+
+  return duration;
+  }
+//}}}
 //{{{
 int32_t cMp4::find_sample_use_offsets (int track, int64_t offset, int32_t* toskip) {
-  return find_sample (track, offset + get_sample_offset (track, 0), toskip);
+  return find_sample (track, offset + getSampleOffset (track, 0), toskip);
   }
 //}}}
 
 //{{{
-int32_t cMp4::read_sample_size (int track, int sample) {
-
-  int32_t temp = audio_frame_size (track, sample);
-  return temp < 0 ? 0 : temp;
+uint32_t cMp4::getSampleSize (int track, int sample) {
+  return tracks[track]->stsz_sample_size ? tracks[track]->stsz_sample_size : tracks[track]->stsz_table[sample];
   }
 //}}}
 //{{{
-int32_t cMp4::read_sample (int track, int sample, uint8_t* buffer) {
-
-  int32_t size = audio_frame_size (track, sample);
-  if (size <= 0)
-    return 0;
+uint32_t cMp4::getSample (int track, int sample, uint8_t* buffer, uint32_t size) {
 
   setPosition (sample_to_offset (track, sample));
-  return read_data (buffer, size);
+  return readData (buffer, size);
   }
 //}}}
 
@@ -562,11 +579,11 @@ int32_t cMp4::setPosition (const uint64_t position) {
 //}}}
 
 //{{{
-int32_t cMp4::read_data (uint8_t* data, uint32_t size) {
+uint32_t cMp4::readData (uint8_t* buffer, uint32_t size) {
 
-  size_t result = fread (data, 1, size, file);
+  size_t result = fread (buffer, 1, size, file);
   current_position += size;
-  return (int32_t)result;
+  return (uint32_t)result;
   }
 //}}}
 
@@ -574,7 +591,7 @@ int32_t cMp4::read_data (uint8_t* data, uint32_t size) {
 uint64_t cMp4::read_int64() {
 
   uint8_t data[8];
-  read_data (data, 8);
+  readData (data, 8);
 
   uint64_t result = 0;
   for (int i = 0; i < 8; i++)
@@ -587,7 +604,7 @@ uint64_t cMp4::read_int64() {
 uint32_t cMp4::read_int32() {
 
   uint8_t data[4];
-  read_data (data, 4);
+  readData (data, 4);
   return (data[0]<<24) | (data[1]<<16) | (data[2]<<8) | data[3];
   }
 //}}}
@@ -595,7 +612,7 @@ uint32_t cMp4::read_int32() {
 uint32_t cMp4::read_int24() {
 
   uint8_t data[3];
-  read_data (data, 3);
+  readData (data, 3);
   return (data[0]<<16) | (data[1]<<8) | data[2];
   }
 //}}}
@@ -603,7 +620,7 @@ uint32_t cMp4::read_int24() {
 uint16_t cMp4::read_int16() {
 
   uint8_t data[2];
-  read_data (data, 2);
+  readData (data, 2);
   return (data[0]<<8) | data[1];
   }
 //}}}
@@ -612,7 +629,7 @@ uint16_t cMp4::read_int16() {
 uint8_t cMp4::read_char() {
 
   uint8_t output;
-  read_data (&output, 1);
+  readData (&output, 1);
   return output;
   }
 //}}}
@@ -620,7 +637,7 @@ uint8_t cMp4::read_char() {
 char* cMp4::read_string (uint32_t length) {
 
   auto str = (uint8_t*)malloc (length + 1);
-  if ((uint32_t)read_data (str, length) != length) {
+  if ((uint32_t)readData (str, length) != length) {
     free (str);
     str = nullptr;
     }
@@ -654,7 +671,7 @@ uint64_t cMp4::readAtomHeader (uint8_t* atom_type, uint8_t* header_size, int ind
     printf ("%8lld ", getPosition());
 
   uint8_t atom_header[9];
-  int32_t ret = read_data (atom_header, 8);
+  int32_t ret = readData (atom_header, 8);
   if (ret != 8)
     return 0;
 
@@ -1058,7 +1075,7 @@ unsigned cMp4::membuffer_transfer_from_file (membuffer* buf, unsigned bytes) {
   if (bufptr == 0)
     return 0;
 
-  if ((unsigned)read_data ((uint8_t*)bufptr + oldsize, bytes) != bytes) {
+  if ((unsigned)readData ((uint8_t*)bufptr + oldsize, bytes) != bytes) {
     membuffer_set_error (buf);
     return 0;
     }
@@ -1107,9 +1124,9 @@ void* cMp4::membuffer_detach (membuffer* buf) {
 const char* cMp4::find_standard_meta (const char* name) {
 // returns atom name if found, 0 if not
 
-  for (unsigned int n = 0; n < sizeof (kStdMetas) / sizeof(stdMetaEntry_t); n++)
-    if (!_stricmp (name, kStdMetas[n].name))
-      return kStdMetas[n].atom;
+  for (unsigned int n = 0; n < sizeof (kStandardMetaItems) / sizeof(standardMetaItem_t); n++)
+    if (!_stricmp (name, kStandardMetaItems[n].name))
+      return kStandardMetaItems[n].atom;
     return 0;
   }
 //}}}
@@ -1205,7 +1222,7 @@ uint32_t cMp4::find_atom (uint64_t base, uint32_t size, const char* name) {
     if (remaining < 8) break;
     atom_size = read_int32();
     if (atom_size > remaining || atom_size < 8) break;
-    read_data (atom_name,4);
+    readData (atom_name,4);
 
     if (!memcmp(atom_name,name,4)) {
       setPosition (atom_offset);
@@ -1467,29 +1484,29 @@ uint32_t cMp4::modify_moov (const metadata_t* data, uint8_t** out_buffer, uint32
     p_out = (uint8_t*)*out_buffer;
 
     setPosition (total_base);
-    read_data (p_out,(uint32_t)(udta_offset - total_base ));
+    readData (p_out,(uint32_t)(udta_offset - total_base ));
     p_out += (uint32_t)(udta_offset - total_base );
     *(uint32_t*)p_out = fixByteOrder32 (read_int32() + size_delta);
     p_out += 4;
 
-    read_data(p_out,4); p_out += 4;
-    read_data(p_out,(uint32_t)(meta_offset - udta_offset - 8));
+    readData(p_out,4); p_out += 4;
+    readData(p_out,(uint32_t)(meta_offset - udta_offset - 8));
     p_out += (uint32_t)(meta_offset - udta_offset - 8);
     *(uint32_t*)p_out = fixByteOrder32 (read_int32() + size_delta);
     p_out += 4;
 
-    read_data(p_out,4); p_out += 4;
-    read_data(p_out,(uint32_t)(ilst_offset - meta_offset - 8));
+    readData(p_out,4); p_out += 4;
+    readData(p_out,(uint32_t)(ilst_offset - meta_offset - 8));
     p_out += (uint32_t)(ilst_offset - meta_offset - 8);
     *(uint32_t*)p_out = fixByteOrder32 (read_int32() + size_delta);
     p_out += 4;
-    read_data(p_out,4); p_out += 4;
+    readData(p_out,4); p_out += 4;
 
     memcpy(p_out,new_ilst_buffer,new_ilst_size);
     p_out += new_ilst_size;
 
     setPosition(ilst_offset + ilst_size);
-    read_data(p_out,(uint32_t)(total_size - (ilst_offset - total_base) - ilst_size));
+    readData(p_out,(uint32_t)(total_size - (ilst_offset - total_base) - ilst_size));
 
     free(new_ilst_buffer);
     }
@@ -1499,12 +1516,6 @@ uint32_t cMp4::modify_moov (const metadata_t* data, uint8_t** out_buffer, uint32
 //}}}
 //}}}
 //{{{  sample
-//{{{
-int32_t cMp4::audio_frame_size (int track, int sample) {
-  return tracks[track]->stsz_sample_size ? tracks[track]->stsz_sample_size : tracks[track]->stsz_table[sample];
-  }
-//}}}
-
 //{{{
 bool cMp4::chunk_of_sample (int track, int sample, int32_t* chunk_sample, int32_t* chunk) {
 
@@ -1656,7 +1667,7 @@ int32_t cMp4::read_esds() {
   tracks[numTracks - 1]->decoderConfig = (uint8_t*)malloc (tracks[numTracks - 1]->decoderConfigLen);
 
   if (tracks[numTracks - 1]->decoderConfig)
-    read_data (tracks[numTracks - 1]->decoderConfig, tracks[numTracks - 1]->decoderConfigLen);
+    readData (tracks[numTracks - 1]->decoderConfig, tracks[numTracks - 1]->decoderConfigLen);
   else
     tracks[numTracks - 1]->decoderConfigLen = 0;
 
@@ -1938,17 +1949,17 @@ int32_t cMp4::read_stsd (int indent) {
     skip += size;
 
     if (atom_type == ATOM_MP4A) {
-      tracks[numTracks - 1]->type = eTRACK_AUDIO;
+      tracks[numTracks - 1]->type = eTrackAUDIO;
       read_mp4a (indent);
       }
     else if (atom_type == ATOM_MP4V)
-      tracks[numTracks - 1]->type = eTRACK_VIDEO;
+      tracks[numTracks - 1]->type = eTrackVIDEO;
     else if (atom_type == ATOM_AVC1)
-      tracks[numTracks - 1]->type = eTRACK_VIDEO;
+      tracks[numTracks - 1]->type = eTrackVIDEO;
     else if (atom_type == ATOM_MP4S)
-      tracks[numTracks - 1]->type = eTRACK_SYSTEM;
+      tracks[numTracks - 1]->type = eTrackSYSTEM;
     else
-      tracks[numTracks - 1]->type = eTRACK_UNKNOWN;
+      tracks[numTracks - 1]->type = eTrackUNKNOWN;
 
     setPosition (skip);
     }

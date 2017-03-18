@@ -4,38 +4,36 @@
 
 class cMp4 {
 public:
-  enum eTrackType { eTRACK_UNKNOWN, eTRACK_AUDIO, eTRACK_VIDEO, eTRACK_SYSTEM };
-
   cMp4 (FILE* file, bool debug);
   ~cMp4();
 
-  int32_t getNumTracks() { return numTracks; }
+  int32_t getAudioTrack();
+  int32_t getVideoTrack();
 
-  int32_t get_track_type (int track) { return tracks[track]->type; }
-  int32_t get_time_scale (int track) { return tracks[track]->timeScale; }
+  int32_t getTimeScale (int track) { return tracks[track]->timeScale; }
 
-  uint32_t get_avg_bitrate (int track) { return tracks[track]->avgBitrate; }
-  uint32_t get_max_bitrate (int track) { return tracks[track]->maxBitrate; }
+  uint32_t getAverageBitrate (int track) { return tracks[track]->avgBitrate; }
+  uint32_t getMaxBitrate (int track) { return tracks[track]->maxBitrate; }
 
-  int64_t get_track_duration (int track) { return tracks[track]->duration; }
-  uint32_t get_audio_type (int track) { return tracks[track]->audioType; }
-  uint32_t get_sample_rate (int track) { return tracks[track]->sampleRate; }
-  uint32_t get_channel_count (int track) { return tracks[track]->channelCount; }
+  int64_t getTrackDuration (int track) { return tracks[track]->duration; }
+  uint32_t getAudioType (int track) { return tracks[track]->audioType; }
+  uint32_t getSampleRate (int track) { return tracks[track]->sampleRate; }
+  uint32_t getChannelCount (int track) { return tracks[track]->channelCount; }
+  int32_t getDecoderConfig (int track, uint8_t** buffer, uint32_t* bufferSize);
 
-  int32_t get_num_samples (int track);
-  int64_t get_track_duration_use_offsets (int track);
-  int32_t get_decoder_config (int track, unsigned char** ppBuf, unsigned int* pBufSize);
+  int32_t getNumSamples (int track);
 
-  int32_t get_sample_duration (int track, int sample);
-  int32_t get_sample_duration_use_offsets (int track, int sample);
-  int64_t get_sample_position (int track, int sample);
-  int32_t get_sample_offset (int track, int sample);
-
+  int32_t getSampleDuration (int track, int sample);
+  int64_t getSamplePosition (int track, int sample);
+  int32_t getSampleOffset (int track, int sample);
   int32_t find_sample (int track, int64_t offset, int32_t* toskip);
+
+  int64_t getTrackDurationUseOffsets (int track);
+  int32_t getSampleDurationUseOffsets (int track, int sample);
   int32_t find_sample_use_offsets (int track, int64_t offset, int32_t* toskip);
 
-  int32_t read_sample_size (int track, int sample);
-  int32_t read_sample (int track, int sample, uint8_t* buffer);
+  uint32_t getSampleSize (int track, int sample);
+  uint32_t getSample (int track, int sample, uint8_t* buffer, uint32_t size);
 
   //{{{  get metadata
   //{{{  struct tag_t
@@ -74,6 +72,7 @@ public:
 
 private:
   #define MAX_TRACKS 16
+  enum eTrackType { eTrackUNKNOWN, eTrackAUDIO, eTrackVIDEO, eTrackSYSTEM };
   //{{{  struct track_t
   typedef struct {
     int32_t type;
@@ -134,7 +133,7 @@ private:
   int64_t getPosition();
   int32_t setPosition (const uint64_t position);
 
-  int32_t read_data (uint8_t* data, uint32_t size);
+  uint32_t readData (uint8_t* buffer, uint32_t size);
 
   uint64_t read_int64();
   uint32_t read_int32();
@@ -207,8 +206,6 @@ private:
   uint32_t modify_moov ( const metadata_t* data, uint8_t** out_buffer, uint32_t* out_size);
   //}}}
   //{{{  sample
-  int32_t audio_frame_size (int track, int sample);
-
   bool chunk_of_sample (int track, int sample, int32_t* chunk_sample, int32_t *chunk);
   int32_t chunk_to_offset (int track, int32_t chunk);
 
