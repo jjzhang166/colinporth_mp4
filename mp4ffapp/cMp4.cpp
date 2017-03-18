@@ -10,92 +10,25 @@
 #define stricmp _stricmp
 #define strdup _strdup
 //}}}
-//{{{  atom defines
-#define SUBATOMIC 128
+//{{{  eAtomType
+enum eAtomType {
+  ATOM_MOOV, ATOM_TRAK, ATOM_EDTS, ATOM_MDIA, ATOM_MINF, ATOM_STBL, ATOM_UDTA,
+  ATOM_ILST, ATOM_TITLE, ATOM_ARTIST, ATOM_WRITER, ATOM_ALBUM, ATOM_DATE, ATOM_TOOL,
+  ATOM_COMMENT, ATOM_GENRE1, ATOM_TRACK, ATOM_DISC, ATOM_COMPILATION, ATOM_GENRE2,
+  ATOM_TEMPO, ATOM_COVER, ATOM_DRMS, ATOM_SINF, ATOM_SCHI,
+  SUBATOMIC,
+  ATOM_FTYP, ATOM_MDAT, ATOM_MVHD, ATOM_TKHD, ATOM_TREF, ATOM_MDHD, ATOM_VMHD, ATOM_SMHD, ATOM_HMHD,
+  ATOM_STSD, ATOM_STTS, ATOM_STSZ, ATOM_STZ2, ATOM_STCO, ATOM_STSC,
+  ATOM_MP4A, ATOM_MP4V, ATOM_AVC1,ATOM_MP4S,
+  ATOM_ESDS, ATOM_META, ATOM_NAME, ATOM_DATA, ATOM_CTTS, ATOM_FRMA, ATOM_IVIV, ATOM_PRIV, ATOM_USER, ATOM_KEY,
+  ATOM_ALBUM_ARTIST, ATOM_CONTENTGROUP, ATOM_LYRICS, ATOM_DESCRIPTION, ATOM_NETWORK, ATOM_SHOW,
+  ATOM_EPISODENAME, ATOM_SORTTITLE, ATOM_SORTALBUM, ATOM_SORTARTIST, ATOM_SORTALBUMARTIST, ATOM_SORTWRITER,
+  ATOM_SORTSHOW, ATOM_SEASON, ATOM_EPISODE, ATOM_PODCAST,
+  ATOM_UNKNOWN };
 
-/* atoms with subatoms */
-#define ATOM_MOOV 1
-#define ATOM_TRAK 2
-#define ATOM_EDTS 3
-#define ATOM_MDIA 4
-#define ATOM_MINF 5
-#define ATOM_STBL 6
-#define ATOM_UDTA 7
-
-#define ATOM_ILST 8 /* iTunes Metadata list */
-#define ATOM_TITLE 9
-#define ATOM_ARTIST 10
-#define ATOM_WRITER 11
-#define ATOM_ALBUM 12
-#define ATOM_DATE 13
-#define ATOM_TOOL 14
-#define ATOM_COMMENT 15
-#define ATOM_GENRE1 16
-#define ATOM_TRACK 17
-#define ATOM_DISC 18
-#define ATOM_COMPILATION 19
-#define ATOM_GENRE2 20
-#define ATOM_TEMPO 21
-#define ATOM_COVER 22
-#define ATOM_DRMS 23
-#define ATOM_SINF 24
-#define ATOM_SCHI 25
-
-/* atoms without subatoms */
-#define ATOM_FTYP 129
-#define ATOM_MDAT 130
-#define ATOM_MVHD 131
-#define ATOM_TKHD 132
-#define ATOM_TREF 133
-#define ATOM_MDHD 134
-#define ATOM_VMHD 135
-#define ATOM_SMHD 136
-#define ATOM_HMHD 137
-#define ATOM_STSD 138
-#define ATOM_STTS 139
-#define ATOM_STSZ 140
-#define ATOM_STZ2 141
-#define ATOM_STCO 142
-#define ATOM_STSC 143
-#define ATOM_MP4A 144
-#define ATOM_MP4V 145
-#define ATOM_MP4S 146
-#define ATOM_ESDS 147
-#define ATOM_META 148 /* iTunes Metadata box */
-#define ATOM_NAME 149 /* iTunes Metadata name box */
-#define ATOM_DATA 150 /* iTunes Metadata data box */
-#define ATOM_CTTS 151
-#define ATOM_FRMA 152
-#define ATOM_IVIV 153
-#define ATOM_PRIV 154
-#define ATOM_USER 155
-#define ATOM_KEY  156
-
-#define ATOM_ALBUM_ARTIST    157
-#define ATOM_CONTENTGROUP    158
-#define ATOM_LYRICS          159
-#define ATOM_DESCRIPTION     160
-#define ATOM_NETWORK         161
-#define ATOM_SHOW            162
-#define ATOM_EPISODENAME     163
-#define ATOM_SORTTITLE       164
-#define ATOM_SORTALBUM       165
-#define ATOM_SORTARTIST      166
-#define ATOM_SORTALBUMARTIST 167
-#define ATOM_SORTWRITER      168
-#define ATOM_SORTSHOW        169
-#define ATOM_SEASON          170
-#define ATOM_EPISODE         171
-#define ATOM_PODCAST         172
-
-#define ATOM_UNKNOWN 255
-#define ATOM_FREE ATOM_UNKNOWN
-#define ATOM_SKIP ATOM_UNKNOWN
-//}}}
-//{{{  atomLookup const
 typedef struct {
   const char* atomName;
-  const uint8_t atomType;
+  const eAtomType atomType;
   } atomLookup_t;
 
 const atomLookup_t kAtomLookup[] = {
@@ -105,9 +38,10 @@ const atomLookup_t kAtomLookup[] = {
   "mdat", ATOM_MDAT,
   "mdhd", ATOM_MDHD,
   "mvhd", ATOM_MVHD,
+  "mp4s", ATOM_MP4S,
   "mp4a", ATOM_MP4A,
   "mp4v", ATOM_MP4V,
-  "mp4s", ATOM_MP4S,
+  "avc1", ATOM_AVC1,
   "meta", ATOM_META,
   "trak", ATOM_TRAK,
   "tkhd", ATOM_TKHD,
@@ -127,7 +61,6 @@ const atomLookup_t kAtomLookup[] = {
   "stsc", ATOM_STSC,
   "stsz", ATOM_STSZ,
   "stz2", ATOM_STZ2,
-  "skip", ATOM_SKIP,
   "sinf", ATOM_SINF,
   "schi", ATOM_SCHI,
   "sonm", ATOM_SORTTITLE,
@@ -149,7 +82,6 @@ const atomLookup_t kAtomLookup[] = {
   "edts", ATOM_EDTS,
   "esds", ATOM_ESDS,
   "ftyp", ATOM_FTYP,
-  "free", ATOM_FREE,
   "hmhd", ATOM_HMHD,
   "vmhd", ATOM_VMHD,
   "udta", ATOM_UDTA,
@@ -170,6 +102,8 @@ const atomLookup_t kAtomLookup[] = {
   "aART", ATOM_ALBUM_ARTIST,
   "desc", ATOM_DESCRIPTION,
   "pcst", ATOM_PODCAST,
+  "skip", ATOM_UNKNOWN,
+  "free", ATOM_UNKNOWN,
   };
 //}}}
 //{{{  stdMetaEntry const
@@ -2027,7 +1961,7 @@ int32_t cMp4::read_stsd (int indent) {
     uint64_t skip = getPosition();
     uint8_t atom_type = 0;
     uint8_t header_size = 0;
-    uint64_t size = readAtomHeader(&atom_type, &header_size, indent);
+    uint64_t size = readAtomHeader (&atom_type, &header_size, indent);
     skip += size;
 
     if (atom_type == ATOM_MP4A) {
@@ -2035,6 +1969,8 @@ int32_t cMp4::read_stsd (int indent) {
       read_mp4a (indent);
       }
     else if (atom_type == ATOM_MP4V)
+      tracks[numTracks - 1]->type = TRACK_VIDEO;
+    else if (atom_type == ATOM_AVC1)
       tracks[numTracks - 1]->type = TRACK_VIDEO;
     else if (atom_type == ATOM_MP4S)
       tracks[numTracks - 1]->type = TRACK_SYSTEM;
