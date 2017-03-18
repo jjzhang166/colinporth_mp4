@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "mp4ff.h"
+#include "cMp4.h"
 //}}}
 
 //{{{
@@ -24,17 +24,17 @@ uint32_t readCallback (void* user_data, void* buffer, uint32_t length) {
 //}}}
 
 //{{{
-int getAacTrack (mp4ff_t* mp4ff) {
+int getAacTrack (cMp4* mp4) {
 
   // find AAC track
   int bestTrack = -1;
 
-  int numTracks = mp4ff_total_tracks (mp4ff);
+  int numTracks = mp4->get_total_tracks();
   printf ("numTracks:%d\n", numTracks);
 
   for (int track = 0; track < numTracks; track++) {
-    printf ("- track:%d type:%d\n", track, mp4ff_get_track_type (mp4ff, track));
-    if (mp4ff_get_track_type (mp4ff, track) == TRACK_AUDIO)
+    printf ("- track:%d type:%d\n", track, mp4->get_track_type (track));
+    if (mp4->get_track_type (track) == TRACK_AUDIO)
       bestTrack = track;
     }
 
@@ -135,33 +135,21 @@ int main (int argc, char** argv) {
     return -1;
     }
     //}}}
-  //{{{  set callbacks
-  auto mp4cb = (mp4ff_callback_t*)malloc (sizeof (mp4ff_callback_t));
-  mp4cb->seek = seekCallback;
-  mp4cb->read = readCallback;
-  mp4cb->user_data = mp4File;
-  //}}}
 
-  auto mp4ff = mp4ff_open (mp4cb, true);
-  if (!mp4ff) {
-    //{{{  error return
-    printf ("unable to open mp4ff\n");
-    return -1;
-    }
-    //}}}
+  auto mp4 = new cMp4 (mp4File, true);
 
-  auto track = getAacTrack (mp4ff);
+  auto track = getAacTrack (mp4);
   printf ("audio track:%d\n", track);
 
-  auto timescale = mp4ff_time_scale (mp4ff, track);
-  long numSamples = mp4ff_num_samples (mp4ff, track);
+  auto timescale = mp4->get_time_scale (track);
+  long numSamples = mp4->get_num_samples (track);
   printf ("timescale:%d, samples:%d\n", timescale, numSamples);
 
-  int meta_num_items = mp4ff_meta_get_num_items (mp4ff);
+  int meta_num_items = mp4->meta_get_num_items();
   for (int k = 0; k < meta_num_items; k++) {
     char* tag = NULL;
     char* item = NULL;
-    if (mp4ff_meta_get_by_index (mp4ff, k, &item, &tag)) {
+    if (mp4->meta_get_by_index (k, &item, &tag)) {
       if (item != NULL && tag != NULL)
         printf ("meta:%d %s %s\n", k, item, tag);
       free (item);
@@ -171,12 +159,12 @@ int main (int argc, char** argv) {
 
   auto adtsFile = fopen ("C:/Users/colin/Desktop/nnnn.adts", "wb");
   for (long sampleId = 0; sampleId < numSamples; sampleId++) {
-    auto duration = mp4ff_get_sample_duration (mp4ff, track, sampleId);
+    auto duration = mp4->get_sample_duration (track, sampleId);
 
-    auto buffer_size = mp4ff_read_sample_size (mp4ff, track, sampleId);
+    auto buffer_size = mp4->read_sample_size (track, sampleId);
     uint8_t* buffer = (uint8_t*)malloc (buffer_size);
 
-    auto bytes = mp4ff_read_sample (mp4ff, track, sampleId, buffer);
+    auto bytes = mp4->read_sample (track, sampleId, buffer);
     //printf ("reading id:%d dur:%d buf:%p bufSize:%d bytes:%d\n", sampleId, duration, buffer, buffer_size, bytes);
 
     auto adtsHeader = makeAdtsHeader (buffer_size);
@@ -186,9 +174,6 @@ int main (int argc, char** argv) {
     }
 
   fclose (adtsFile);
-  mp4ff_close (mp4ff);
-
-  free (mp4cb);
   fclose (mp4File);
 
   printf ("done, sleep 30s\n");

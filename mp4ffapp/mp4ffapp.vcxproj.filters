@@ -18,12 +18,12 @@
     <ClCompile Include="mp4ffapp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="mp4ff.cpp">
+    <ClCompile Include="cMp4.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="mp4ff.h">
+    <ClInclude Include="cMp4.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

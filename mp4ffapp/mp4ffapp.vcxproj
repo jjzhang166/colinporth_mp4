@@ -139,11 +139,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="mp4ff.cpp" />
+    <ClCompile Include="cMp4.cpp" />
     <ClCompile Include="mp4ffapp.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="mp4ff.h" />
+    <ClInclude Include="cMp4.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
