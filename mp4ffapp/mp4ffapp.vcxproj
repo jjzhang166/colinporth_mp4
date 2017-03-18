@@ -24,6 +24,7 @@
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>mp4ffapp</RootNamespace>
     <WindowsTargetPlatformVersion>10.0.14393.0</WindowsTargetPlatformVersion>
+    <ProjectName>cMp4App</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -140,7 +141,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="cMp4.cpp" />
-    <ClCompile Include="mp4ffapp.cpp" />
+    <ClCompile Include="cMp4App.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="cMp4.h" />

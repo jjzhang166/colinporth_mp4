@@ -15,10 +15,10 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="mp4ffapp.cpp">
+    <ClCompile Include="cMp4.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="cMp4.cpp">
+    <ClCompile Include="cMp4App.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
