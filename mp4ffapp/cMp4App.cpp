@@ -60,71 +60,79 @@ uint8_t* makeAdtsHeader (int frameSize, int header_type, int sbr, int channels, 
   }
 //}}}
 
-//{{{
 int main (int argc, char** argv) {
+
   //{{{  parse args
   bool mLogInfo = false;
-  uint32_t mAlpha = 200;
-  uint32_t mScale = 2;
-  unsigned int frequency = 0;
 
   int arg = 1;
   if (argc > 1)
     while (arg < argc) {
-      if (!strcmp(argv[arg], "i")) { mLogInfo = true; arg++; }
-      else if (!strcmp(argv[arg], "a"))  { arg++; mAlpha = atoi (argv[arg++]); }
-      else if (!strcmp(argv[arg], "s"))  { arg++; mScale = atoi (argv[arg++]); }
-      else if (!strcmp(argv[arg], "itv")) { frequency = 650000000; arg++; }
-      else if (!strcmp(argv[arg], "bbc")) { frequency = 674000000; arg++; }
-      else if (!strcmp(argv[arg], "hd"))  { frequency = 706000000; arg++; }
-      else break;
+      if (!strcmp(argv[arg], "i")) {
+        mLogInfo = true;
+        arg++;
+        }
+      else
+        break;
       }
   //}}}
 
   auto mp4File = fopen (argv[arg], "rb");
   if (!mp4File) {
     //{{{  error return
-    printf ("unable to open %s\n", argv[arg]);
+    printf ("Mp4App unable to open %s\n", argv[arg]);
     return -1;
     }
     //}}}
 
-  auto mp4 = new cMp4 (mp4File, true);
+  cMp4 mp4 (mp4File, true);
 
-  auto track = mp4->getAudioTrack();
-  auto timeScale = mp4->getTimeScale (track);
-  auto numSamples = mp4->getNumSamples (track);
-  printf ("audio track:%dtimescale:%d, samples:%d\n", track, timeScale, numSamples);
-
-  auto meta_num_items = mp4->meta_get_num_items();
-  for (auto k = 0; k < meta_num_items; k++) {
+  //{{{  get metadata
+  auto meta_num_items = mp4.meta_get_num_items();
+  for (auto metaItem = 0; metaItem < meta_num_items; metaItem++) {
     char* tag = NULL;
     char* item = NULL;
-    if (mp4->meta_get_by_index (k, &item, &tag)) {
+    if (mp4.meta_get_by_index (metaItem, &item, &tag)) {
       if (item != NULL && tag != NULL)
-        printf ("meta:%d %s %s\n", k, item, tag);
+        printf ("meta:%d %s %s\n", metaItem, item, tag);
       free (item);
       free (tag);
       }
     }
+  //}}}
+  //{{{  get audio
+  auto track = mp4.getAudioTrack();
+  auto timeScale = mp4.getTimeScale (track);
+  auto numSamples = mp4.getNumSamples (track);
+  printf ("audio track:%d timescale:%d, samples:%d\n", track, timeScale, numSamples);
 
   auto adtsFile = fopen ("C:/Users/colin/Desktop/nnnn.adts", "wb");
   for (auto sample = 0; sample < numSamples; sample++) {
-    auto duration = mp4->getSampleDuration (track, sample);
-    auto bufferSize = mp4->getSampleSize (track, sample);
+    auto duration = mp4.getSampleDuration (track, sample);
+    auto bufferSize = mp4.getSampleSize (track, sample);
     auto buffer = (uint8_t*)malloc (bufferSize);
-    auto bytes = mp4->getSample (track, sample, buffer, bufferSize);
-    auto adtsHeader = makeAdtsHeader (bufferSize, 0, 0, 2, 2, 44100);
+    auto bytes = mp4.getSample (track, sample, buffer, bufferSize);
+    auto adtsHeader = makeAdtsHeader (bufferSize, 0, 0, 2, 2, mp4.getSampleRate (track));
     fwrite (adtsHeader, 1, 7, adtsFile);
     fwrite (buffer, 1, bufferSize, adtsFile);
     free (buffer);
     }
-
   fclose (adtsFile);
+  //}}}
+
+  // get video
+  track = mp4.getVideoTrack();
+  timeScale = mp4.getTimeScale (track);
+  numSamples = mp4.getNumSamples (track);
+  printf ("video track:%d timescale:%d, samples:%d\n", track, timeScale, numSamples);
+  for (auto sample = 0; sample < numSamples; sample++) {
+    auto duration = mp4.getSampleDuration (track, sample);
+    auto bufferSize = mp4.getSampleSize (track, sample);
+    printf ("sample:%d duration:%d, size:%d\n", sample, duration, bufferSize);
+    }
+
   fclose (mp4File);
 
-  printf ("done, sleep 30s\n");
   Sleep (30000);
   return 0;
   }
-//}}}

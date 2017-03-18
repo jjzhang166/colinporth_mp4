@@ -11,10 +11,8 @@ public:
   int32_t getVideoTrack();
 
   int32_t getTimeScale (int track) { return tracks[track]->timeScale; }
-
-  uint32_t getAverageBitrate (int track) { return tracks[track]->avgBitrate; }
   uint32_t getMaxBitrate (int track) { return tracks[track]->maxBitrate; }
-
+  uint32_t getAverageBitrate (int track) { return tracks[track]->avgBitrate; }
   int64_t getTrackDuration (int track) { return tracks[track]->duration; }
   uint32_t getAudioType (int track) { return tracks[track]->audioType; }
   uint32_t getSampleRate (int track) { return tracks[track]->sampleRate; }
@@ -22,7 +20,6 @@ public:
   int32_t getDecoderConfig (int track, uint8_t** buffer, uint32_t* bufferSize);
 
   int32_t getNumSamples (int track);
-
   int32_t getSampleDuration (int track, int sample);
   int64_t getSamplePosition (int track, int sample);
   int32_t getSampleOffset (int track, int sample);
@@ -35,7 +32,6 @@ public:
   uint32_t getSampleSize (int track, int sample);
   uint32_t getSample (int track, int sample, uint8_t* buffer, uint32_t size);
 
-  //{{{  get metadata
   //{{{  struct tag_t
   typedef struct {
     char* item;
@@ -48,7 +44,7 @@ public:
     uint32_t count;
     } metadata_t;
   //}}}
-
+  //{{{  get metadata
   int meta_get_num_items();
   int meta_get_by_index (unsigned int index, char** item, char** value);
   int meta_get_title (char** value);
@@ -72,7 +68,7 @@ public:
 
 private:
   #define MAX_TRACKS 16
-  enum eTrackType { eTrackUNKNOWN, eTrackAUDIO, eTrackVIDEO, eTrackSYSTEM };
+  enum eTrackType { eTrackUnknown, eTrackAudio, eTrackVideo, eTrackSystem };
   //{{{  struct track_t
   typedef struct {
     int32_t type;
@@ -227,7 +223,7 @@ private:
   int32_t read_meta (uint64_t size, int indent);
   int32_t read_stsd (int indent);
 
-  int32_t atom_read (int32_t size, uint8_t atom_type, int indent);
+  int32_t parseAtom (int32_t size, uint8_t atom_type, int indent);
 
   int32_t parseSubAtoms (const uint64_t total_size, int indent);
   int32_t parseAtoms();
@@ -250,5 +246,5 @@ private:
   int32_t numTracks = 0;
   track_t* tracks[MAX_TRACKS];
 
-  metadata_t tags = { 0,0 };
+  metadata_t tags = { 0, 0 };
   };

@@ -7,7 +7,10 @@
 
 #include "cMp4.h"
 //}}}
-//{{{  eAtomType
+//{{{  const
+#define COPYRIGHT_SYMBOL ((int8_t)0xA9)
+
+//{{{
 enum eAtomType {
   ATOM_MOOV, ATOM_TRAK, ATOM_EDTS, ATOM_MDIA, ATOM_MINF, ATOM_STBL, ATOM_UDTA,
   ATOM_ILST, ATOM_TITLE, ATOM_ARTIST, ATOM_WRITER, ATOM_ALBUM, ATOM_DATE, ATOM_TOOL,
@@ -22,12 +25,14 @@ enum eAtomType {
   ATOM_EPISODENAME, ATOM_SORTTITLE, ATOM_SORTALBUM, ATOM_SORTARTIST, ATOM_SORTALBUMARTIST, ATOM_SORTWRITER,
   ATOM_SORTSHOW, ATOM_SEASON, ATOM_EPISODE, ATOM_PODCAST,
   ATOM_UNKNOWN };
-
+//}}}
+//{{{  struct atomLookup_t
 typedef struct {
   const char* atomName;
   const eAtomType atomType;
   } atomLookup_t;
-
+//}}}
+//{{{
 const atomLookup_t kAtomLookup[] = {
   "moov", ATOM_MOOV,
   "minf", ATOM_MINF,
@@ -103,12 +108,14 @@ const atomLookup_t kAtomLookup[] = {
   "free", ATOM_UNKNOWN,
   };
 //}}}
-//{{{  standardMetaItem
+
+//{{{  struct standardMetaItem
 typedef struct {
   const char* atom;
   const char* name;
   } standardMetaItem_t;
-
+//}}}
+//{{{
 const standardMetaItem_t kStandardMetaItems[] = {
   {"\xA9" "nam", "title"},
   {"\xA9" "ART", "artist"},
@@ -127,10 +134,9 @@ const standardMetaItem_t kStandardMetaItems[] = {
   {"aART", "album_artist"},
   };
 //}}}
-//{{{  const
-#define COPYRIGHT_SYMBOL ((int8_t)0xA9)
+
 //{{{
-static const char* tag_names[] = {
+const char* kTagNames[] = {
     "unknown", "title", "artist", "writer", "album",
     "date", "tool", "comment", "genre", "track",
     "disc", "compilation", "genre", "tempo", "cover",
@@ -142,7 +148,7 @@ static const char* tag_names[] = {
     };
 //}}}
 //{{{
-static const char* ID3v1GenreList[] = {
+const char* kID3v1GenreList[] = {
     "Blues", "Classic Rock", "Country", "Dance", "Disco", "Funk",
     "Grunge", "Hip-Hop", "Jazz", "Metal", "New Age", "Oldies",
     "Other", "Pop", "R&B", "Rap", "Reggae", "Rock",
@@ -248,7 +254,7 @@ int32_t cMp4::getAudioTrack() {
 
   int32_t bestTrack = -1;
   for (auto track = 0; track < numTracks; track++)
-    if (tracks[track]->type == eTrackAUDIO)
+    if (tracks[track]->type == eTrackAudio)
       bestTrack = track;
 
   return bestTrack;
@@ -259,7 +265,7 @@ int32_t cMp4::getVideoTrack() {
 
   int32_t bestTrack = -1;
   for (auto track = 0; track < numTracks; track++)
-    if (tracks[track]->type == eTrackVIDEO)
+    if (tracks[track]->type == eTrackVideo)
       bestTrack = track;
 
   return bestTrack;
@@ -828,7 +834,7 @@ int32_t cMp4::set_metadata_name (uint8_t atom_type, char* *name) {
     default: tag_idx = 0; break;
     }
 
-  *name = _strdup(tag_names[tag_idx]);
+  *name = _strdup (kTagNames[tag_idx]);
 
   return 0;
   }
@@ -836,8 +842,8 @@ int32_t cMp4::set_metadata_name (uint8_t atom_type, char* *name) {
 //{{{
 const char* cMp4::meta_index_to_genre (uint32_t idx) {
 
-  if (idx>0 && idx<=sizeof(ID3v1GenreList)/sizeof(ID3v1GenreList[0]))
-    return ID3v1GenreList[idx-1];
+  if (idx>0 && idx <= sizeof (kID3v1GenreList) / sizeof (kID3v1GenreList[0]))
+    return kID3v1GenreList[idx-1];
   else
     return 0;
   }
@@ -1200,8 +1206,8 @@ void cMp4::membuffer_write_custom_tag (membuffer* buf, const char* name, const c
 uint32_t cMp4::meta_genre_to_index (const char* genrestr) {
 
   unsigned n;
-  for (n = 0; n < sizeof (ID3v1GenreList)/sizeof(ID3v1GenreList[0]); n++)
-    if (!_stricmp (genrestr,ID3v1GenreList[n]))
+  for (n = 0; n < sizeof (kID3v1GenreList)/sizeof(kID3v1GenreList[0]); n++)
+    if (!_stricmp (genrestr, kID3v1GenreList[n]))
       return n+1;
   return 0;
   }
@@ -1611,11 +1617,9 @@ int32_t cMp4::read_stsz() {
   tracks[numTracks - 1]->stsz_sample_count = read_int32();
 
   if (tracks[numTracks - 1]->stsz_sample_size == 0) {
-    int32_t i;
-    tracks[numTracks - 1]->stsz_table =
-      (int32_t*)malloc(tracks[numTracks - 1]->stsz_sample_count*sizeof(int32_t));
+    tracks[numTracks - 1]->stsz_table = (int32_t*)malloc(tracks[numTracks - 1]->stsz_sample_count*sizeof(int32_t));
 
-    for (i = 0; i < tracks[numTracks - 1]->stsz_sample_count; i++)
+    for (int i = 0; i < tracks[numTracks - 1]->stsz_sample_count; i++)
       tracks[numTracks - 1]->stsz_table[i] = read_int32();
     }
 
@@ -1629,7 +1633,7 @@ int32_t cMp4::read_esds() {
   read_int24(); /* flags */
 
   /* get and verify ES_DescrTag */
-  uint8_t tag = read_char();
+  auto tag = read_char();
   if (tag == 0x03) {
     /* read length */
     if (read_mp4_descr_length() < 5 + 15)
@@ -1646,7 +1650,7 @@ int32_t cMp4::read_esds() {
     return 1;
 
   // read length
-  uint32_t temp = read_mp4_descr_length();
+  auto temp = read_mp4_descr_length();
   if (temp < 13)
     return 1;
 
@@ -1703,8 +1707,7 @@ int32_t cMp4::read_stco() {
   read_int24(); /* flags */
   tracks[numTracks-1]->stco_entry_count = read_int32();
 
-  tracks[numTracks-1]->stco_chunk_offset =
-    (int32_t*)malloc (tracks[numTracks-1]->stco_entry_count * sizeof (int32_t));
+  tracks[numTracks-1]->stco_chunk_offset = (int32_t*)malloc (tracks[numTracks-1]->stco_entry_count * sizeof (int32_t));
 
   for (int i = 0; i < tracks[numTracks-1]->stco_entry_count; i++)
     tracks[numTracks - 1]->stco_chunk_offset[i] = read_int32();
@@ -1814,8 +1817,8 @@ int32_t cMp4::read_mvhd() {
 //{{{
 int32_t cMp4::read_tkhd() {
 
-  uint8_t version = read_char(); /* version */
-  uint32_t flags = read_int24(); /* flags */
+  auto version = read_char(); /* version */
+  auto flags = read_int24(); /* flags */
 
   if (version == 1) {
     read_int64(); // creation-time
@@ -1860,7 +1863,7 @@ int32_t cMp4::read_tkhd() {
 //{{{
 int32_t cMp4::read_mdhd() {
 
-  uint32_t version = read_int32();
+  auto version = read_int32();
   if (version == 1) {
     read_int64();//creation-time
     read_int64();//modification-time
@@ -1871,7 +1874,7 @@ int32_t cMp4::read_mdhd() {
     read_int32();//creation-time
     read_int32();//modification-time
     tracks[numTracks - 1]->timeScale = read_int32();//timescale
-    uint32_t temp = read_int32();
+    auto temp = read_int32();
     tracks[numTracks - 1]->duration = (temp == (uint32_t)(-1)) ? (uint64_t)(-1) : (uint64_t)(temp);
     }
 
@@ -1891,7 +1894,7 @@ int32_t cMp4::read_meta (uint64_t size, int indent) {
   uint8_t header_size = 0;
   while (sumsize < (size-(header_size + 4))) {
     uint8_t atom_type;
-    uint64_t subsize = readAtomHeader(&atom_type, &header_size, indent);
+    uint64_t subsize = readAtomHeader (&atom_type, &header_size, indent);
     if (subsize <= header_size + 4)
       return 1;
     if (atom_type == ATOM_ILST)
@@ -1941,7 +1944,7 @@ int32_t cMp4::read_stsd (int indent) {
 
   tracks[numTracks - 1]->stsd_entry_count = read_int32();
 
-  for (int32_t i = 0; i < tracks[numTracks - 1]->stsd_entry_count; i++) {
+  for (int i = 0; i < tracks[numTracks - 1]->stsd_entry_count; i++) {
     uint64_t skip = getPosition();
     uint8_t atom_type = 0;
     uint8_t header_size = 0;
@@ -1949,17 +1952,17 @@ int32_t cMp4::read_stsd (int indent) {
     skip += size;
 
     if (atom_type == ATOM_MP4A) {
-      tracks[numTracks - 1]->type = eTrackAUDIO;
+      tracks[numTracks - 1]->type = eTrackAudio;
       read_mp4a (indent);
       }
     else if (atom_type == ATOM_MP4V)
-      tracks[numTracks - 1]->type = eTrackVIDEO;
+      tracks[numTracks - 1]->type = eTrackVideo;
     else if (atom_type == ATOM_AVC1)
-      tracks[numTracks - 1]->type = eTrackVIDEO;
+      tracks[numTracks - 1]->type = eTrackVideo;
     else if (atom_type == ATOM_MP4S)
-      tracks[numTracks - 1]->type = eTrackSYSTEM;
+      tracks[numTracks - 1]->type = eTrackSystem;
     else
-      tracks[numTracks - 1]->type = eTrackUNKNOWN;
+      tracks[numTracks - 1]->type = eTrackUnknown;
 
     setPosition (skip);
     }
@@ -1969,9 +1972,9 @@ int32_t cMp4::read_stsd (int indent) {
 //}}}
 
 //{{{
-int32_t cMp4::atom_read (int32_t size, uint8_t atom_type, int indent) {
+int32_t cMp4::parseAtom (int32_t size, uint8_t atom_type, int indent) {
 
-  uint64_t dest_position = getPosition() + size - 8;
+  auto dest_position = getPosition() + size - 8;
 
   if (atom_type == ATOM_STSZ)      // sample size box
     read_stsz();
@@ -2019,7 +2022,7 @@ int32_t cMp4::parseSubAtoms (const uint64_t total_size, int indent) {
     if (atom_type < SUBATOMIC)
       parseSubAtoms (size - header_size, indent + 1);
     else
-      atom_read ((uint32_t)size, atom_type, indent);
+      parseAtom ((uint32_t)size, atom_type, indent);
 
     count += size;
     }
@@ -2036,7 +2039,7 @@ int32_t cMp4::parseAtoms() {
   while (true) {
     uint8_t atom_type = 0;
     uint8_t header_size = 0;
-    auto size = readAtomHeader(&atom_type, &header_size, 0);
+    auto size = readAtomHeader (&atom_type, &header_size, 0);
     if (size == 0)
       break;
     file_size += size;
@@ -2056,7 +2059,7 @@ int32_t cMp4::parseAtoms() {
 
     // parse subatoms
     if (atom_type < SUBATOMIC)
-      parseSubAtoms (size - header_size, 0);
+      parseSubAtoms (size - header_size, 1);
     else // skip this atom
       setPosition (getPosition() + size - header_size);
     }
