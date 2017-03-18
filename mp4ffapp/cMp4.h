@@ -3,6 +3,7 @@
 #include <stdint.h>
 //{{{  track defines
 #define TRACK_UNKNOWN 0
+
 #define TRACK_AUDIO   1
 #define TRACK_VIDEO   2
 #define TRACK_SYSTEM  3
@@ -220,7 +221,6 @@ private:
   int32_t set_sample_position (int track, int sample);
   //}}}
   //{{{  atom
-  void track_add();
   int32_t read_stsz();
   int32_t read_esds();
   int32_t read_stsc();
@@ -230,10 +230,13 @@ private:
   int32_t read_mvhd();
   int32_t read_tkhd();
   int32_t read_mdhd();
+
   int32_t read_mp4a (int indent);
   int32_t read_meta (uint64_t size, int indent);
   int32_t read_stsd (int indent);
+
   int32_t atom_read (int32_t size, uint8_t atom_type, int indent);
+
   int32_t parseSubAtoms (const uint64_t total_size, int indent);
   int32_t parseAtoms();
   //}}}

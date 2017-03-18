@@ -370,7 +370,6 @@ int32_t cMp4::get_sample_offset (int track, int sample) {
 //{{{
 int32_t cMp4::find_sample (int track, int64_t offset, int32_t* toskip) {
 
-
   int32_t co = 0;
   int64_t offset_total = 0;
 
@@ -842,8 +841,8 @@ int32_t cMp4::parse_tag (uint8_t parent_atom_type, int32_t size) {
 
   while (sumsize < size) {
     uint64_t destpos;
-    subsize = readAtomHeader(&atom_type, &header_size, 0);
-    destpos = getPosition()+subsize-header_size;
+    subsize = readAtomHeader (&atom_type, &header_size, 0);
+    destpos = getPosition() + subsize-header_size;
     if (!done) {
       if (atom_type == ATOM_DATA) {
         read_char(); /* version */
@@ -886,21 +885,18 @@ int32_t cMp4::parse_tag (uint8_t parent_atom_type, int32_t size) {
               /* modified by AJS */
             /* read_int16(); */
 
-            sprintf(temp,"%d",index);
-            tag_add_field(&(tags), parent_atom_type == ATOM_TRACK ? "track" : "disc", temp);
+            sprintf (temp, "%d",index);
+            tag_add_field (&(tags), parent_atom_type == ATOM_TRACK ? "track" : "disc", temp);
             if (total>0)
             {
-              sprintf(temp,"%d",total);
-              tag_add_field(&(tags), parent_atom_type == ATOM_TRACK ? "totaltracks" : "totaldiscs", temp);
+              sprintf (temp, "%d",total);
+              tag_add_field (&(tags), parent_atom_type == ATOM_TRACK ? "totaltracks" : "totaldiscs", temp);
             }
             done = 1;
             }
           }
         else {
-          if (data) {
-            free(data);
-            data = NULL;
-            }
+          free (data);
           data = read_string ((uint32_t)(subsize-(header_size+8)));
           }
         }
@@ -1053,6 +1049,7 @@ void* cMp4::membuffer_get_ptr (const membuffer* buf) { return buf->data; }
 unsigned cMp4::membuffer_get_size (const membuffer* buf) { return buf->written; }
 unsigned cMp4::membuffer_error (const membuffer* buf) { return buf->error; }
 void cMp4::membuffer_set_error (membuffer* buf) { buf->error = 1; }
+
 //{{{
 unsigned cMp4::membuffer_transfer_from_file (membuffer* buf, unsigned bytes) {
 
@@ -1350,22 +1347,21 @@ uint32_t cMp4::find_atom_v2 (uint64_t base, uint32_t size, const char* name,
 //{{{
 uint32_t cMp4::create_meta (const metadata_t* data, void** out_buffer, uint32_t* out_size) {
 
-  membuffer * buf;
   uint32_t ilst_size;
-  void * ilst_buffer;
-
-  if (!create_ilst(data,&ilst_buffer,&ilst_size))
+  void* ilst_buffer;
+  if (!create_ilst (data, &ilst_buffer, &ilst_size))
     return 0;
 
-  buf = membuffer_create();
+  membuffer* buf = membuffer_create();
 
-  membuffer_write_int32(buf,0);
-  membuffer_write_atom(buf,"ilst",ilst_size,ilst_buffer);
-  free(ilst_buffer);
+  membuffer_write_int32 (buf, 0);
+  membuffer_write_atom (buf, "ilst", ilst_size, ilst_buffer);
+  free (ilst_buffer);
 
   *out_size = membuffer_get_size(buf);
   *out_buffer = membuffer_detach(buf);
   membuffer_free(buf);
+
   return 1;
   }
 //}}}
@@ -1398,26 +1394,25 @@ uint32_t cMp4::modify_moov ( const metadata_t* data, uint8_t** out_buffer, uint3
   uint64_t total_base = moov_offset + 8;
   uint32_t total_size = (uint32_t)(moov_size - 8);
 
-  uint64_t udta_offset,meta_offset,ilst_offset;
-  uint32_t udta_size,  meta_size,  ilst_size;
+  uint64_t udta_offset, meta_offset, ilst_offset;
+  uint32_t udta_size, meta_size, ilst_size;
 
   uint32_t new_ilst_size;
-  void * new_ilst_buffer;
+  void* new_ilst_buffer;
 
-  uint8_t * p_out;
+  uint8_t* p_out;
   int32_t size_delta;
   if (!find_atom_v2 (total_base, total_size, "udta", 0, "meta")) {
-    membuffer* buf;
     void* new_udta_buffer;
     uint32_t new_udta_size;
     if (!create_udta (data, &new_udta_buffer, &new_udta_size))
       return 0;
 
-    buf = membuffer_create();
+    membuffer* buf = membuffer_create();
     setPosition (total_base);
     membuffer_transfer_from_file (buf, total_size);
 
-    membuffer_write_atom (buf,"udta", new_udta_size,  new_udta_buffer);
+    membuffer_write_atom (buf, "udta", new_udta_size,  new_udta_buffer);
 
     free (new_udta_buffer);
 
@@ -1431,13 +1426,12 @@ uint32_t cMp4::modify_moov ( const metadata_t* data, uint8_t** out_buffer, uint3
     udta_offset = getPosition();
     udta_size = read_int32();
     if (!find_atom_v2 (udta_offset + 8, udta_size - 8, "meta", 4, "ilst")) {
-      membuffer* buf;
       void* new_meta_buffer;
       uint32_t new_meta_size;
       if (!create_meta (data, &new_meta_buffer, &new_meta_size))
         return 0;
 
-      buf = membuffer_create();
+      membuffer* buf = membuffer_create();
       setPosition (total_base);
       membuffer_transfer_from_file (buf, (uint32_t)(udta_offset - total_base));
 
@@ -1608,15 +1602,6 @@ int32_t cMp4::set_sample_position (int track, int sample) {
 //}}}
 //}}}
 //{{{  atom
-//{{{
-void cMp4::track_add() {
-
-  numTracks++;
-  tracks[numTracks - 1] = (track_t*)malloc (sizeof (track_t));
-  memset (tracks[numTracks - 1], 0, sizeof (track_t));
-  }
-//}}}
-
 //{{{
 int32_t cMp4::read_stsz() {
 
@@ -1898,6 +1883,29 @@ int32_t cMp4::read_mdhd() {
 //}}}
 
 //{{{
+int32_t cMp4::read_meta (uint64_t size, int indent) {
+
+  read_char(); /* version */
+  read_int24(); /* flags */
+
+  uint64_t sumsize = 0;
+  uint8_t header_size = 0;
+  while (sumsize < (size-(header_size + 4))) {
+    uint8_t atom_type;
+    uint64_t subsize = readAtomHeader(&atom_type, &header_size, indent);
+    if (subsize <= header_size + 4)
+      return 1;
+    if (atom_type == ATOM_ILST)
+      parse_metadata ((uint32_t)(subsize - (header_size + 4)), indent);
+    else
+      setPosition (getPosition() + subsize - header_size);
+    sumsize += subsize;
+    }
+
+  return 0;
+  }
+//}}}
+//{{{
 int32_t cMp4::read_mp4a (int indent) {
 
   for (int i = 0; i < 6; i++)
@@ -1919,32 +1927,9 @@ int32_t cMp4::read_mp4a (int indent) {
 
   uint8_t atom_type = 0;
   uint8_t header_size = 0;
-  uint64_t size = readAtomHeader(&atom_type, &header_size, indent);
+  uint64_t size = readAtomHeader (&atom_type, &header_size, indent);
   if (atom_type == ATOM_ESDS)
     read_esds();
-
-  return 0;
-  }
-//}}}
-//{{{
-int32_t cMp4::read_meta (uint64_t size, int indent) {
-
-  read_char(); /* version */
-  read_int24(); /* flags */
-
-  uint64_t sumsize = 0;
-  uint8_t header_size = 0;
-  while (sumsize < (size-(header_size + 4))) {
-    uint8_t atom_type;
-    uint64_t subsize = readAtomHeader(&atom_type, &header_size, indent);
-    if (subsize <= header_size + 4)
-      return 1;
-    if (atom_type == ATOM_ILST)
-      parse_metadata ((uint32_t)(subsize - (header_size + 4)), indent);
-    else
-      setPosition (getPosition() + subsize - header_size);
-    sumsize += subsize;
-    }
 
   return 0;
   }
@@ -1989,23 +1974,23 @@ int32_t cMp4::atom_read (int32_t size, uint8_t atom_type, int indent) {
 
   uint64_t dest_position = getPosition() + size - 8;
 
-  if (atom_type == ATOM_STSZ) /* sample size box */
+  if (atom_type == ATOM_STSZ)      // sample size box
     read_stsz();
-  else if (atom_type == ATOM_STTS) /* time to sample box */
+  else if (atom_type == ATOM_STTS) // time to sample box
     read_stts();
-  else if (atom_type == ATOM_CTTS) /* composition offset box */
+  else if (atom_type == ATOM_CTTS) // composition offset box
     read_ctts();
-  else if (atom_type == ATOM_STSC) /* sample to chunk box */
+  else if (atom_type == ATOM_STSC) // sample to chunk box
     read_stsc();
-  else if (atom_type == ATOM_STCO) /* chunk offset box */
+  else if (atom_type == ATOM_STCO) // chunk offset box
     read_stco();
-  else if (atom_type == ATOM_STSD) /* sample description box */
-    read_stsd (indent);
-  else if (atom_type == ATOM_MVHD) /* movie header box */
+  else if (atom_type == ATOM_MVHD) // movie header box
     read_mvhd();
-  else if (atom_type == ATOM_MDHD) /* track header */
+  else if (atom_type == ATOM_MDHD) // track header
     read_mdhd();
-  else if (atom_type == ATOM_META) /* iTunes Metadata box */
+  else if (atom_type == ATOM_STSD) // sample description box
+    read_stsd (indent);
+  else if (atom_type == ATOM_META) // iTunes Metadata box
     read_meta (size, indent);
 
   setPosition (dest_position);
@@ -2021,22 +2006,23 @@ int32_t cMp4::parseSubAtoms (const uint64_t total_size, int indent) {
   while (count < total_size) {
     uint8_t atom_type = 0;
     uint8_t header_size = 0;
-    auto size = readAtomHeader(&atom_type, &header_size, indent);
+    auto size = readAtomHeader (&atom_type, &header_size, indent);
     if (!size)
       break;
-    count += size;
 
     if (atom_type == ATOM_TRAK) {
-      // new track
+      // add new track
+      tracks[numTracks] = (track_t*)malloc (sizeof (track_t));
+      memset (tracks[numTracks], 0, sizeof (track_t));
       numTracks++;
-      tracks[numTracks-1] = (track_t*)malloc (sizeof (track_t));
-      memset (tracks[numTracks-1], 0, sizeof (track_t));
       }
 
     if (atom_type < SUBATOMIC)
       parseSubAtoms (size - header_size, indent + 1);
     else
       atom_read ((uint32_t)size, atom_type, indent);
+
+    count += size;
     }
 
   return 0;

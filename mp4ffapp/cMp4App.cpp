@@ -147,13 +147,13 @@ int main (int argc, char** argv) {
     }
 
   auto adtsFile = fopen ("C:/Users/colin/Desktop/nnnn.adts", "wb");
-  for (long sampleId = 0; sampleId < numSamples; sampleId++) {
-    auto duration = mp4->get_sample_duration (track, sampleId);
+  for (long sampleIndex = 0; sampleIndex < numSamples; sampleIndex++) {
+    auto duration = mp4->get_sample_duration (track, sampleIndex);
 
-    auto buffer_size = mp4->read_sample_size (track, sampleId);
+    auto buffer_size = mp4->read_sample_size (track, sampleIndex);
     uint8_t* buffer = (uint8_t*)malloc (buffer_size);
 
-    auto bytes = mp4->read_sample (track, sampleId, buffer);
+    auto bytes = mp4->read_sample (track, sampleIndex, buffer);
     //printf ("reading id:%d dur:%d buf:%p bufSize:%d bytes:%d\n", sampleId, duration, buffer, buffer_size, bytes);
 
     auto adtsHeader = makeAdtsHeader (buffer_size);
