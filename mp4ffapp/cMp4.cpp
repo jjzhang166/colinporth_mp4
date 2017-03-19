@@ -8,7 +8,7 @@
 #include "cMp4.h"
 //}}}
 //{{{  const
-#define COPYRIGHT_SYMBOL ((int8_t)0xA9)
+#define COPYRIGHT_SYMBOL 0xA9
 
 //{{{
 enum eAtomType {
@@ -124,13 +124,8 @@ const standardMetaItem_t kStandardMetaItems[] = {
   {"\xA9" "day", "date"},
   {"\xA9" "too", "tool"},
   {"\xA9" "cmt", "comment"},
-  //{"\xA9" "gen","genre"},
   {"cpil", "compilation"},
-  //{"trkn","track"},
-  //{"disk","disc"},
-  //{"gnre","genre"},
   {"covr", "cover"},
-  /* added by AJS */
   {"aART", "album_artist"},
   };
 //}}}
@@ -1594,9 +1589,8 @@ int32_t cMp4::readStsz() {
   tracks[numTracks - 1]->stsz_sample_count = readInt32();
 
   if (tracks[numTracks - 1]->stsz_sample_size == 0) {
-    tracks[numTracks - 1]->stsz_table = (int32_t*)malloc(tracks[numTracks - 1]->stsz_sample_count*sizeof(int32_t));
-
-    for (int i = 0; i < tracks[numTracks - 1]->stsz_sample_count; i++)
+    tracks[numTracks - 1]->stsz_table = (int32_t*)malloc (tracks[numTracks - 1]->stsz_sample_count * sizeof(int32_t));
+    for (auto i = 0; i < tracks[numTracks - 1]->stsz_sample_count; i++)
       tracks[numTracks - 1]->stsz_table[i] = readInt32();
     }
 
@@ -1668,7 +1662,7 @@ int32_t cMp4::readStsc() {
   tracks[numTracks-1]->stsc_samples_per_chunk = (int32_t*)malloc (tracks[numTracks-1]->stsc_entry_count * sizeof (int32_t));
   tracks[numTracks-1]->stsc_sample_desc_index = (int32_t*)malloc (tracks[numTracks-1]->stsc_entry_count * sizeof (int32_t));
 
-  for (int i = 0; i < tracks[numTracks-1]->stsc_entry_count; i++) {
+  for (auto i = 0; i < tracks[numTracks-1]->stsc_entry_count; i++) {
     tracks[numTracks-1]->stsc_first_chunk[i] = readInt32();
     tracks[numTracks-1]->stsc_samples_per_chunk[i] = readInt32();
     tracks[numTracks-1]->stsc_sample_desc_index[i] = readInt32();
@@ -1686,7 +1680,7 @@ int32_t cMp4::readStco() {
 
   tracks[numTracks-1]->stco_chunk_offset = (int32_t*)malloc (tracks[numTracks-1]->stco_entry_count * sizeof (int32_t));
 
-  for (int i = 0; i < tracks[numTracks-1]->stco_entry_count; i++)
+  for (auto i = 0; i < tracks[numTracks-1]->stco_entry_count; i++)
     tracks[numTracks - 1]->stco_chunk_offset[i] = readInt32();
 
   return 0;
@@ -1718,7 +1712,7 @@ int32_t cMp4::readCtts() {
     return 0;
     }
   else {
-    for (int i = 0; i < tracks[numTracks - 1]->ctts_entry_count; i++) {
+    for (auto i = 0; i < tracks[numTracks - 1]->ctts_entry_count; i++) {
       tracks[numTracks - 1]->ctts_sample_count[i] = readInt32();
       tracks[numTracks - 1]->ctts_sample_offset[i] = readInt32();
       }
@@ -1751,7 +1745,7 @@ int32_t cMp4::readStts() {
     return 0;
     }
   else {
-    for (int i = 0; i < tracks[numTracks - 1]->stts_entry_count; i++) {
+    for (auto i = 0; i < tracks[numTracks - 1]->stts_entry_count; i++) {
       tracks[numTracks - 1]->stts_sample_count[i] = readInt32();
       tracks[numTracks - 1]->stts_sample_delta[i] = readInt32();
       }
@@ -1774,10 +1768,10 @@ int32_t cMp4::readMvhd() {
   /* preferred_rate */ readInt32(); /*read_fixed32();*/
   /* preferred_volume */ readInt16(); /*read_fixed16();*/
 
-  for (int i = 0; i < 10; i++)
+  for (auto i = 0; i < 10; i++)
     /* reserved */ readChar();
 
-  for (int i = 0; i < 9; i++)
+  for (auto i = 0; i < 9; i++)
     readInt32(); /* matrix */
 
   /* preview_time */ readInt32();
@@ -1887,7 +1881,7 @@ int32_t cMp4::readMeta (uint64_t size, int indent) {
 //{{{
 int32_t cMp4::readMp4a (int indent) {
 
-  for (int i = 0; i < 6; i++)
+  for (auto i = 0; i < 6; i++)
     readChar(); /* reserved */
   /* data_reference_index */ readInt16();
 
@@ -1906,7 +1900,7 @@ int32_t cMp4::readMp4a (int indent) {
 
   uint8_t atom_type = 0;
   uint8_t header_size = 0;
-  uint64_t size = readAtomHeader (&atom_type, &header_size, indent);
+  auto size = readAtomHeader (&atom_type, &header_size, indent);
   if (atom_type == ATOM_ESDS)
     readEsds();
 
@@ -1921,11 +1915,11 @@ int32_t cMp4::readStsd (int indent) {
 
   tracks[numTracks - 1]->stsd_entry_count = readInt32();
 
-  for (int i = 0; i < tracks[numTracks - 1]->stsd_entry_count; i++) {
+  for (auto i = 0; i < tracks[numTracks - 1]->stsd_entry_count; i++) {
     uint64_t skip = getPosition();
     uint8_t atom_type = 0;
     uint8_t header_size = 0;
-    uint64_t size = readAtomHeader (&atom_type, &header_size, indent);
+    auto size = readAtomHeader (&atom_type, &header_size, indent);
     skip += size;
 
     if (atom_type == ATOM_MP4A) {
@@ -1976,7 +1970,6 @@ int32_t cMp4::parseAtom (int32_t size, uint8_t atom_type, int indent) {
   return 0;
   }
 //}}}
-
 //{{{
 int32_t cMp4::parseSubAtoms (const uint64_t total_size, int indent) {
 // parse atoms that are sub atoms of other atoms

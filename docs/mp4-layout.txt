@@ -1,24 +1,16 @@
-
-            ****************************
-            * ISO 14496-1 Media Format *
-            ****************************
+* ISO 14496-1 Media Format *
 
  - values use big endian (network) byte order
  - general terms: integer = signed value
- - general values: byte/char/octet = 8-bit value; short/word = 16-bit value;
-                    long = 32-bit value
- - fixed point values: value made up of an integer for whole numbers
-                        and an unsigned value for the decimal
+ - general values: byte/char/octet = 8-bit value; short/word = 16-bit value; long = 32-bit value
+ - fixed point values: value made up of an integer for whole numbers and an unsigned value for the decimal
  - binary values: base-2 long unsigned values (values from 0 and 1)
  - octal values: base-8 long unsigned values (values from 0 through to 7)
  - decimal values: base-10 long unsigned values (values from 0 through to 9)
- - hexadecimal (hex) values: base-16 long unsigned values
-                              (values from 0 to 9 and A to F)
- - box offsets: values relative to boxes only
-                 and are used to skip to the next box
+ - hexadecimal (hex) values: base-16 long unsigned values (values from 0 to 9 and A to F)
+ - box offsets: values relative to boxes only and are used to skip to the next box
  - sample chunk/block offsets: values relative to the file's length
- - UUID: a hexadecimal Universal Unique Identifier
-          that is 128 bits in length
+ - UUID: a hexadecimal Universal Unique Identifier that is 128 bits in length
 
 FILE INFO
 
@@ -46,7 +38,7 @@ was based upon.  The terms 3GPP and APPLE denote custom additions to the format.
 Even though the original ISO specification is static Apple members have added
 bits from the 3GPP and iTunes versions as extensions such as those in parts 10 and 12.
 
-
+{{{  ftyp
 FILE IDENTIFICATION
 
 * 8+ bytes file type box = long unsigned offset + long ASCII text string 'ftyp'
@@ -63,16 +55,14 @@ FILE IDENTIFICATION
        vers. 2 uses the full part one spec, M4A uses custom ISO 14496-12 info,
        qt means the format complies with the original Apple spec, 3gp uses sample
        descriptions in the same style as the original Apple spec.
-
+}}}
+{{{  mdat
 FILE MEDIA DATA
 
-Note: if any box grows in excess of 2^32 bytes (> 4.2 GB), the box size can be extended
-in increments of 64 bits (18.4 EB).
+Note: if any box grows in excess of 2^32 bytes (> 4.2 GB), the box size can be extended in increments of 64 bits (18.4 EB).
 By setting the box size to 1 and appending a new 64 bit box size.
-This is why empty 'wide' boxes may be found on either side of this box header for
-future expansion of the sample data.
-By setting the box size to 0, the media data box is open ended and extends to the end
-of the file.
+This is why empty 'wide' boxes may be found on either side of this box header for future expansion of the sample data.
+By setting the box size to 0, the media data box is open ended and extends to the end of the file.
 
 * 8+ bytes media (sample) data box = long unsigned offset + long ASCII text string 'mdat'
   -> 8 bytes larger file offset place holder box
@@ -83,25 +73,23 @@ of the file.
 
   -> Sample data = hex dump
       - Media with multiple tracks have sample data interleaved unless preloaded.
-
+}}}
+{{{  free,skip, wide
 UNUSED SPACE OR DATA TO BE DELETED/REUSED WITHIN FILE
-
 * 8+ bytes free space (current) box
     = long unsigned offset + long ASCII text string 'free'
-
 * 8+ bytes skip over (older) box
     = long unsigned offset + long ASCII text string 'skip'
-
 * 8+ bytes widen (lengthen) file box
     = long unsigned offset + long ASCII text string 'wide'
-
+}}}
+{{{  meta
 EXTERNAL MPEG-7 META DATA ONLY
-
 * 8+ bytes optional ISO/IEC 14496-12 presentation meta data box
     = long unsigned offset + long ASCII text string 'meta'
   -> 4 bytes version/flags = byte hex version + 24-bit hex flags
       (current = 0)
-
+   {{{  hdlr
    * 8+ bytes ISO/IEC 14496-12 handler reference box
        = long unsigned offset + long ASCII text string 'hdlr'
     - this box must be toward the start of the meta box
@@ -118,68 +106,69 @@ EXTERNAL MPEG-7 META DATA ONLY
      -> component type name ASCII string
          (eg. "Meta Data Handler" - no name = zero length string)
      -> 1 byte component name string end = byte padding set to zero
-       - note: the quicktime spec uses a Pascal string
-               instead of the above C string
-
+       - note: the quicktime spec uses a Pascal string instead of the above C string
+   }}}
+   {{{  xml
    * 8+ bytes optional ISO/IEC 14496-12 MPEG-7 XML box
        = long unsigned offset + long ASCII text string 'xml '
-     -> 4 bytes version/flags = byte hex version + 24-bit hex flags
-         (current = 0)
+     -> 4 bytes version/flags = byte hex version + 24-bit hex flags (current = 0)
      -> MPEG-7 XML meta data = text dump
-
+   }}}
+   {{{  bxml
    * 8+ bytes optional ISO/IEC 14496-12 MPEG-7 binary XML box
        = long unsigned offset + long ASCII text string 'bxml'
-     -> 4 bytes version/flags = byte hex version + 24-bit hex flags
-         (current = 0)
+     -> 4 bytes version/flags = byte hex version + 24-bit hex flags (current = 0)
      -> MPEG-7 encoded XML meta data = hex dump
-
+   }}}
+   {{{  iloc
    * 8+ bytes optional ISO/IEC 14496-12 item location box
        = long unsigned offset + long ASCII text string 'iloc'
-     -> 4 bytes version/flags = byte hex version + 24-bit hex flags
-         (current = 0)
+     -> 4 bytes version/flags = byte hex version + 24-bit hex flags (current = 0)
      -> 1 nibble size of access offsets = 4 bits one byte multiples
-       - 8-bit offset = 0 ; 32-bit offset = 4 ; 64-bit offset = 8  
+       - 8-bit offset = 0 ; 32-bit offset = 4 ; 64-bit offset = 8
      -> 1 nibble size of data lengths = 4 bits one byte multiples
-       - 8-bit offset = 0 ; 32-bit offset = 4 ; 64-bit offset = 8  
+       - 8-bit offset = 0 ; 32-bit offset = 4 ; 64-bit offset = 8
      -> 1 nibble size of starting offset = 4 bits one byte multiples
-       - 8-bit offset = 0 ; 32-bit offset = 4 ; 64-bit offset = 8  
+       - 8-bit offset = 0 ; 32-bit offset = 4 ; 64-bit offset = 8
      -> 1 nibble reserved = 4 bits set to zero
      -> 2 bytes number of locations = short unsigned index total
      -> 2+ bytes item reference = short unsigned id
      -> 2+ bytes stream data reference = short unsigned index from 'dref' box
-       - if meta data item in same file set to zero  
+       - if meta data item in same file set to zero
      -> 1-8+ bytes starting offset =  byte - dlong unsigned offset
      -> 2+ bytes number of access points = short unsigned index total
      -> 1-8+ bytes access offset =  byte - dlong unsigned relative offset
          (relative to starting offset)
      -> 1-8+ bytes data length =  byte - dlong unsigned length
-
+   }}}
+   {{{  pitm
    * 8+ bytes optional ISO/IEC 14496-12 primary item box
        = long unsigned offset + long ASCII text string 'pitm'
      -> 4 bytes version/flags = byte hex version + 24-bit hex flags
-         (current = 0)
-     -> 2 bytes main item reference = short unsigned id
-
+         (current = 0) -> 2 bytes main item reference = short unsigned id
+   }}}
+   {{{  ipro
    * 8+ bytes optional ISO/IEC 14496-12 item encryption box
        = long unsigned offset + long ASCII text string 'ipro'
-     -> 4 bytes version/flags = byte hex version + 24-bit hex flags
-         (current = 0)
+     -> 4 bytes version/flags = byte hex version + 24-bit hex flags (current = 0)
      -> 2 bytes number of encryption boxes = short unsigned index total
-
+      {{{  sinf
       * 8+ bytes ISO/IEC 14496-12 encryption scheme info box
           = long unsigned offset + long ASCII text string 'sinf'
        - if meta data encrypted to ISO/IEC 14496-12 standards
 
+         {{{  frma
          * 8+ bytes ISO/IEC 14496-12 original format box
              = long unsigned offset + long ASCII text string 'frma'
            -> 4 bytes description format = long ASCII text string
-
+         }}}
+         {{{  imif
          * 8+ bytes optional ISO/IEC 14496-12 IPMP info box
              = long unsigned offset + long ASCII text string 'imif'
-           -> 4 bytes version/flags = byte hex version + 24-bit hex flags
-               (current = 0)
+           -> 4 bytes version/flags = byte hex version + 24-bit hex flags (current = 0)
            -> IPMP descriptors = hex dump from IPMP part of ES Descriptor box
-
+         }}}
+         {{{  schm
          * 8+ bytes optional ISO/IEC 14496-12 scheme type box
              = long unsigned offset + long ASCII text string 'schm'
            -> 4 bytes version/flags = byte hex version + 24-bit hex flags
@@ -189,14 +178,17 @@ EXTERNAL MPEG-7 META DATA ONLY
                 - types are NULL algorithm = 'ENUL' ; 160-bit HMAC-SHA-1 = 'SHM2'
                 - types are RTCP = 'ANUL' ; private scheme = '    '
            -> 2 bytes encryption version = short unsigned version
-           -> optional scheme URI string = UTF-8 text string
-             (eg. web site)
+           -> optional scheme URI string = UTF-8 text string (eg. web site)
            -> 1 byte optional scheme URI string end = byte padding set to zero
-
+         }}}
+         {{{  schi
          * 8+ bytes ISO/IEC 14496-12 scheme data box
              = long unsigned offset + long ASCII text string 'schi'
            -> encryption related key = hex dump
-
+         }}}
+      }}}
+   }}}
+   {{{  pitm
    * 8+ bytes optional ISO/IEC 14496-12 item information box
        = long unsigned offset + long ASCII text string 'pitm'
      -> 4 bytes version/flags = byte hex version + 24-bit hex flags
@@ -209,9 +201,10 @@ EXTERNAL MPEG-7 META DATA ONLY
      -> 1 byte mime type c string end = byte value set to zero
      -> optional item transfer encoding string = UTF-8 text string
      -> 1 byte optional transfer encoding c string end = byte value set to zero
-
+   }}}
+}}}
+{{{  moov
 FILE MEDIA HEADER
-
 Note: the header is safer when stored at the beginning of the file or in another
 file fork as HFS resource type 'moov'; ID any.
 The advantage of using another file fork is that the header can be lengthened
@@ -219,7 +212,7 @@ without recalculating the sample offsets or new header must be written at the en
 of the file.
 
 * 8+ bytes movie (presentation) box = long unsigned offset + long ASCII text string 'moov'
-
+   {{{  mdra
    * 8+ bytes QUICKTIME movie data reference atom
        = long unsigned offset + long ASCII text string 'mdra'
     - if this is used no other atoms or boxes should be present at this level
@@ -238,29 +231,33 @@ of the file.
         OR
         -> url c string = ASCII text string
         -> 1 byte url c string end = byte value set to zero
-
+   }}}
+   {{{  cmov
    * 8+ bytes QUICKTIME compressed moov atom
        = long unsigned offset + long ASCII text string 'cmov'
     - if this is used no other atoms should be present
        as this is for an entire compressed movie resource
-
+      {{{  dcom
       * 8+ bytes data compression atom
           = long unsigned offset + long ASCII text string 'dcom'
         -> 4 bytes compression code = long ASCII text string
           - compression codes are Deflate = 'zlib' ; Apple Compression = 'adec'
-
+      }}}
+      {{{  cmvd
       * 8+ bytes compressed moov data atom
           = long unsigned offset + long ASCII text string 'cmvd'
         -> 4 bytes uncompressed size = long unsigned value
         -> entire compressed movie 'moov' resource = hex dump
-
+      }}}
+   }}}
+   {{{  rmra
    * 8+ bytes QUICKTIME reference movie record atom
        = long unsigned offset + long ASCII text string 'rmra'
     - if this atom is used it must come first within the movie resource box
-
+      {{{  rmda
       * 8+ bytes reference movie descriptor atom
           = long unsigned offset + long ASCII text string 'rmda'
-
+         {{{  rdrf
          * 8+ bytes reference movie data reference atom
              = long unsigned offset + long ASCII text string 'rdrf'
            -> 4 bytes reference version/flags
@@ -276,16 +273,19 @@ of the file.
            OR
            -> url c string = ASCII text string
            -> 1 byte url c string end = byte value set to zero
-
+         }}}
+         {{{  rmqu
          * 8+ bytes optional reference movie quality atom
              = long unsigned offset + long ASCII text string 'rmqu'
            -> 4 bytes queue position = long unsigned value from 100 to 0
-
+         }}}
+         {{{  rmcs
          * 8+ bytes optional reference movie cpu rating atom
              = long unsigned offset + long ASCII text string 'rmcs'
            -> 4 bytes reserved flag = byte hex version + 24-bit hex flags (current = 0)
            -> 2 bytes speed rating = short unsigned value from 500 to 100
-
+         }}}
+         {{{  rmvc
          * 8+ bytes optional reference movie version check atom
              = long unsigned offset + long ASCII text string 'rmvc'
            -> 4 bytes flags = byte hex version + 24-bit hex flags (current = 0)
@@ -301,7 +301,8 @@ of the file.
 
            -> 2 bytes gestalt check type = short unsigned value
                (min value = 0 or mask = 1)
-
+         }}}
+         {{{  rmcd
          * 8+ bytes optional reference movie component check atom
              = long unsigned offset + long ASCII text string 'rmcd'
            -> 4 bytes flags = byte hex version + 24-bit hex flags (current = 0)
@@ -313,7 +314,8 @@ of the file.
            -> 4 bytes component flags = long hex flags (none = 0)
            -> 4 bytes component flags mask = long hex mask (none = 0)
            -> 4 bytes component min version = long hex value (none = 0)
-
+         }}}
+         {{{  rmdr
          * 8+ bytes optional reference movie data rate atom
              = long unsigned offset + long ASCII text string 'rmdr'
            -> 4 bytes flags = byte hex version + 24-bit hex flags (current = 0)
@@ -321,18 +323,23 @@ of the file.
              - common analog modem rates are 1400; 2800; 3300; 5600
              - common broadband rates are 5600; 11200; 25600; 38400; 51200; 76800; 100000
              - common high end broadband rates are T1 = 150000; no limit/LAN = 0x7FFFFFFF
-
+         }}}
+         {{{  rmla
          * 8+ bytes optional reference movie language atom
              = long unsigned offset + long ASCII text string 'rmla'
            -> 4 bytes flags = byte hex version + 24-bit hex flags (current = 0)
            -> 2 bytes mac language = short unsigned language value (english = 0)
-
+         }}}
+         {{{  rmag
          * 8+ bytes optional reference movie alternate group atom
              = long unsigned offset + long ASCII text string 'rmag'
              (structure was not provided in MoviesFormat.h of the 4.1.2 win32 sdk)
            -> 4 bytes flags = long value set to zero
            -> 2 bytes alternate/other = short integer track id value (none = 0)
-
+         }}}
+      }}}
+   }}}
+   {{{  iods
    * 8+ bytes optional initial object descriptor box
        = long unsigned offset + long ASCII text string 'iods'
     - NOTE: this was added in vers. 2 of spec
@@ -360,7 +367,8 @@ of the file.
 
        -> 4 bytes Track ID = 32-bit unsigned value
          - NOTE: refers to non-data system tracks
-
+   }}}
+   {{{  mvhd
    * 8+ bytes movie (presentation) header box
        = long unsigned offset + long ASCII text string 'mvhd'
      -> 1 byte version = 8-bit unsigned value
@@ -413,7 +421,8 @@ of the file.
          = long unsigned start time + long unsigned time length (in time units)
      -> 4 bytes QUICKTIME current time = long unsigned frame time (in time units)
      -> 4 bytes next/new track id = long integer value (single track = 2)
-
+   }}}
+   {{{  clip
    * 8+ bytes QUICKTIME clipping (mask) atom
        = long unsigned offset + long ASCII text string 'clip'
 
@@ -423,9 +432,10 @@ of the file.
         -> 8 bytes region boundary
             = long fixed point x value + long fixed point y value
         -> QuickDraw Region Data = hex dump
-
+   }}}
+   {{{  trak
    * 8+ bytes track (element) box = long unsigned offset + long ASCII text string 'trak'
-
+      {{{  tkhd
       * 8+ bytes track (element) header box
           = long unsigned offset + long ASCII text string 'tkhd'
         -> 1 byte version = byte unsigned value
@@ -480,25 +490,29 @@ of the file.
             = long fixed point divider scale (restricted to 1.0)
         -> 8 bytes decimal video frame size
             = long fixed point width + long fixed point height
-
+      }}}
+      {{{  clip
       * 8+ bytes QUICKTIME clipping (mask) atom
           = long unsigned offset + long ASCII text string 'clip'
        - see moov clipping atom above
-
+      }}}
+      {{{  matt
       * 8+ bytes QUICKTIME matte (video overlay) atom
           = long unsigned offset + long ASCII text string 'matt'
-
+         {{{  kmat
          * 8+ bytes compressed matte atom
              = long unsigned offset + long ASCII text string 'kmat'
            -> 4 bytes version/flags = byte hex version + 24-bit hex flags (current = 0)
            -> Matte Image Description Structure
              (similar to Media Sample Description Table)
            -> Matte Data = hex dump
-
+         }}}
+      }}}
+      {{{  edts
       * 8+ bytes optional edits (# of external tracks) box
           = long unsigned offset + long ASCII text string 'edts'
        - if tracks are of different start times this atom is needed to maintain media sync.
-
+         {{{  elst
          * 8+ bytes optional edit list box
              = long unsigned offset + long ASCII text string 'elst'
            -> 1 byte version = byte unsigned value
@@ -514,7 +528,9 @@ of the file.
              - if start time is -1, then that time length is edited out
 
            -> 4 bytes decimal playback speed = long fixed point rate (normal = 1.0)
-
+         }}}
+      }}}
+      {{{  load
       * 8+ bytes QUICKTIME preload atom
           = long unsigned offset + long ASCII text string 'load'
         -> 8 bytes preload time
@@ -526,9 +542,11 @@ of the file.
           - flags are SingleFieldPlayback = 0x00100000
           - flags are DeinterlaceFields = 0x04000000
 
+      }}}
+      {{{  tref
       * 8+ bytes optional track references box
           = long unsigned offset + long ASCII text string 'tref'
-
+         {{{  ipir
          * 8+ bytes type of reference box
              = long unsigned offset + long ASCII text string
           -> vers. 1 box type is stream hint = 'hint'
@@ -539,10 +557,13 @@ of the file.
           -> QUICKTIME atom types are transcript (text) = 'scpt'
           -> QUICKTIME atom types are non-primary source (used in other track) = 'ssrc'
            -> 4+ bytes Track IDs = long integer track numbers (Disabled Track ID = 0)
-
+         }}}
+      }}}
+      {{{  imap
       * 8+ bytes QUICKTIME non-primary source input map atom
           = long unsigned offset + long ASCII text string 'imap'
 
+         {{{  in
          * 8+ bytes input atom
              = long unsigned offset + long ASCII text string 0x0000 + 'in'
            -> 4 bytes atom ID = long integer atom reference (first ID = 1)
@@ -561,9 +582,11 @@ of the file.
             * 8+ bytes object ID atom
                 = long unsigned offset + long ASCII text string 'obid'
               -> 4 bytes object ID = long integer value
-
+         }}}
+      }}}
+      {{{  mdia
       * 8+ bytes media (stream) box = long unsigned offset + long ASCII text string 'mdia'
-
+         {{{  mdhd
          * 8+ bytes media (stream) header box
              = long unsigned offset + long ASCII text string 'mdhd'
            -> 1 byte version = byte unsigned value
@@ -591,7 +614,8 @@ of the file.
            -> 1 7/8 bytes content language = 3 * 5-bits ISO 639-2 language code less 0x60
              - example code for english = 0x15C7
            -> 2 bytes QUICKTIME quality = short integer playback quality value (normal = 0)
-
+         }}}
+         {{{  hdlr
          * 8+ bytes handler reference box
              = long unsigned offset + long ASCII text string 'hdlr'
           - this box must be toward the start of the media box
@@ -612,10 +636,11 @@ of the file.
            -> 1 byte component name string end = byte padding set to zero
              - note: the quicktime spec uses a Pascal string
                      instead of the above C string
-
+         }}}
+         {{{  minf
          * 8+ bytes media (stream) information box
              = long unsigned offset + long ASCII text string 'minf'
-
+            {{{  vmhd
             * 8+ bytes visual media (stream) info header box
                 = long unsigned offset + long ASCII text string 'vmhd'
               -> 4 bytes version/flags = byte hex version + 24-bit hex flags
@@ -627,14 +652,18 @@ of the file.
                 - mode color types are transparent = 0x0024; straight alpha blend = 0x0104
                 - NOTE: MPEG-4 only uses copy mode and quicktime uses dither copy by default
               -> 6 bytes graphic mode color = 3 * short unsigned QuickDraw RGB color values
+            }}}
             OR
+            {{{  smhd
             * 8+ bytes sound media (stream) info header box
                 = long unsigned offset + long ASCII text string 'smhd'
               -> 4 bytes version/flags = byte hex version + 24-bit hex flags (current = 0)
               -> 2 bytes audio balance = short fixed point value
                - balnce scale is left = negatives ; normal = 0.0 ; right = positives
               -> 2 bytes reserved = short value set to zero
+            }}}
             OR
+            {{{  hint
             * 8+ bytes hint stream (stream) info header box
                 = long unsigned offset + long ASCII text string 'hint'
               -> 4 bytes version/flags = byte hex version + 24-bit hex flags (current = 0)
@@ -643,11 +672,15 @@ of the file.
               -> 4 bytes maximum bit rate = long unsigned value
               -> 4 bytes average bit rate = long unsigned value
               -> 4 bytes reserved = long value set to zero
+            }}}
             OR
+            {{{  nmhd
             * 8+ bytes mpeg-4 media (stream) header box
                 = long unsigned offset + long ASCII text string 'nmhd'
               -> 4 bytes version/flags = byte hex version + 24-bit hex flags (current = 0)
+            }}}
 
+            {{{  hdlr
             * 8+ bytes QUICKTIME handler reference atom
                 = long unsigned offset + long ASCII text string 'hdlr'
              -> 4 bytes version/flags = byte hex version + 24-bit hex flags (current = 0)
@@ -660,7 +693,8 @@ of the file.
              -> 1 byte component name string length = byte unsigned length
                  (no name = zero length string)
              -> component type name ASCII string (eg. "Data Handler")
-
+            }}}
+            {{{  dinf
             * 8+ bytes data (locator) information box
                 = long unsigned offset + long ASCII text string 'dinf'
 
@@ -671,6 +705,7 @@ of the file.
                  -> 4 bytes number of references = long unsigned total
                      (minimum = 1)
 
+                  {{{  urn
                   * 8+ bytes reference type box
                       = long unsigned offset + long ASCII text string
                    - box types are url c string = 'url ' ; urn c strings = 'urn '
@@ -692,32 +727,39 @@ of the file.
                     OR
                     -> QUICKTIME mac os file alias record structure
                         plus resource info points to external data
+                  }}}
               OR
+               {{{  url
                * 8+ bytes Data URL box
                    = long unsigned offset + long ASCII text string 'url '
                  -> 4 bytes version/flags = byte hex version + 24-bit hex flags
                      (current = 0)
                  -> url c string = ASCII text string points to external data
                  -> 1 byte url c string end = byte value set to zero
+               }}}
               OR
+               {{{  urn
                * 8+ bytes Data URN box = long unsigned offset + long ASCII text string 'urn '
                  -> 4 bytes version/flags = byte hex version + 24-bit hex flags (current = 0)
                  -> urn c string = ASCII text string points to external data
                  -> 1 byte urn c string end = byte value set to zero
                  -> url c string = ASCII text string points to external data
                  -> 1 byte url c string end = byte value set to zero
-
+               }}}
+            }}}
+            {{{  stbl
             * 8+ bytes sample (framing info) table box
                 = long unsigned offset + long ASCII text string 'stbl'
-
+               {{{  stsd
                * 8+ bytes sample (frame encoding) description box
                    = long unsigned offset + long ASCII text string 'stsd'
                  -> 4 bytes version/flags = byte hex version + 24-bit hex flags
                      (current = 0)
                  -> 4 bytes number of descriptions = long unsigned total
                      (default = 1)
- 
+
                  -> 4 bytes description length = long unsigned length
+                 {{{  mp4v
                  -> 4 bytes description visual format = long ASCII text string 'mp4v'
                    - if encoded to ISO/IEC 14496-10 or 3GPP AVC standards then use:
                  -> 4 bytes description visual format = long ASCII text string 'avc1'
@@ -758,8 +800,11 @@ of the file.
                      (no table = -1)
                  -> optional QUICKTIME color table data if above set to 0
                      (see color table atom below for layout)
+                 }}}
+
                  OR
                  -> 4 bytes description length = long unsigned length
+                 {{{  mp4a
                  -> 4 bytes description audio format = long ASCII text string 'mp4a'
                    - if encrypted to ISO/IEC 14496-12 or 3GPP standards then use:
                  -> 4 bytes description audio format = long ASCII text string 'enca'
@@ -786,8 +831,11 @@ of the file.
                    - default = 0
                  -> 2 bytes QUICKTIME audio packet size = short value set to zero
                  -> 4 bytes audio sample rate = long unsigned fixed point rate
+                 }}}
+
                  OR
                  -> 4 bytes description length = long unsigned length
+                 {{{  mp4s
                  -> 4 bytes description system format = long ASCII text string 'mp4s'
                    - if encrypted to ISO/IEC 14496-12 standards then use:
                  -> 4 bytes description system format = long ASCII text string 'encs'
@@ -798,7 +846,7 @@ of the file.
                   * 8+ bytes ISO/IEC 14496-12/3GPP encryption scheme info box
                       = long unsigned offset + long ASCII text string 'sinf'
                    - if stream encrypted to ISO/IEC 14496-12 standards
-
+                     {{{  frma
                      * 8+ bytes ISO/IEC 14496-12/3GPP/QUICKTIME original format box
                          = long unsigned offset + long ASCII text string 'frma'
                        -> 4 bytes description format = long ASCII text string
@@ -806,13 +854,15 @@ of the file.
                          - formats are MPEG-4 audio = 'mp4a' ; MPEG-4 system = 'mp4s'
                          - 3GPP formats are H.253 = 's263' ; AMR narrow = 'samr'
                          - 3GPP format is AMR wide = 'sawb'
-
+                     }}}
+                     {{{  imif
                      * 8+ bytes optional ISO/IEC 14496-12 IPMP info box
                          = long unsigned offset + long ASCII text string 'imif'
                        -> 4 bytes version/flags = byte hex version + 24-bit hex flags
                            (current = 0)
                        -> IPMP descriptors = hex dump from IPMP part of ES Descriptor box
-
+                     }}}
+                     {{{  schm
                      * 8+ bytes optional ISO/IEC 14496-12/3GPP scheme type box
                          = long unsigned offset + long ASCII text string 'schm'
                        -> 4 bytes version/flags = byte hex version + 24-bit hex flags
@@ -825,11 +875,14 @@ of the file.
                        -> optional scheme URI string = UTF-8 text string
                          (eg. web site)
                        -> 1 byte optional scheme URI string end = byte padding set to zero
-
+                     }}}
+                     {{{  schi
                      * 8+ bytes ISO/IEC 14496-12/3GPP scheme data box
                          = long unsigned offset + long ASCII text string 'schi'
                        -> encryption related key = hex dump
+                     }}}
 
+                  {{{  d263
                   * 8+ bytes 3GPP H.263v1 decode config box
                       = long unsigned offset + long ASCII text string 'd263'
                     -> 4 bytes encoder vendor = long ASCII text string
@@ -841,7 +894,8 @@ of the file.
                          = long unsigned offset + long ASCII text string 'bitr'
                        -> 4 bytes average bit rate = 32-bit unsigned value
                        -> 4 bytes maximum bit rate = 32-bit unsigned value
-
+                  }}}
+                  {{{  damr
                   * 8+ bytes 3GPP GSM 6.10 AMR decode config box
                       = long unsigned offset + long ASCII text string 'damr'
                     -> 4 bytes encoder vendor = long ASCII text string
@@ -849,7 +903,8 @@ of the file.
                     -> 2 byte packet modes = 16-bit unsigned bit mode index
                     -> 1 byte number of packet mode changes = 8-bit unsigned value
                     -> 1 byte samples per packet = 8-bit unsigned value
-
+                  }}}
+                  {{{  avcC
                   * 8+ bytes ISO/IEC 14496-10 or 3GPP AVC decode config box
                       = long unsigned offset + long ASCII text string 'avcC'
                     -> 1 byte version = 8-bit hex version  (current = 1)
@@ -865,7 +920,8 @@ of the file.
                     -> 1 byte number of PPS = 8-bit unsigned total
                     -> 2+ bytes PPS length = short unsigned length
                     -> + PPS NAL unit = hexdump
-
+                  }}}
+                  {{{  esds
                   * 8+ bytes vers. 2 ES Descriptor box
                       = long unsigned offset + long ASCII text string 'esds'
                    - if encoded to ISO/IEC 14496-10 AVC standards then optionally use:
@@ -942,23 +998,30 @@ of the file.
                         -> 1 byte descriptor type length = 8-bit unsigned length
 
                           -> 1 byte SL value = 8-bit hex value set to 0x02
-
+                  }}}
+                  {{{  gama
                   * 8+ bytes QUICKTIME video gamma atom
                       = long unsigned offset + long ASCII text string 'gama'
                     -> 4 bytes decimal level = long fixed point level
-                 
+                  }}}
+                  {{{  fiel
                   * 8+ bytes QUICKTIME video field order atom
                       = long unsigned offset + long ASCII text string 'fiel'
                     -> 2 bytes field count/order = byte integer total + byte integer order
-                 
+                  }}}
+                  {{{  mjqt
                   * 8+ bytes QUICKTIME video m-jpeg quantize table atom
                       = long unsigned offset + long ASCII text string 'mjqt'
                     -> quantization table = hex dump
-                   
+                  }}}
+                  {{{  mjht
                   * 8+ bytes QUICKTIME video m-jpeg huffman table atom
                       = long unsigned offset + long ASCII text string 'mjht'
                     -> huffman table = hex dump
-
+                  }}}
+                 }}}
+               }}}
+               {{{  stts
                * 8+ bytes time to sample (frame timing) box
                    = long unsigned offset + long ASCII text string 'stts'
                  -> 4 bytes version/flags = byte hex version + 24-bit hex flags
@@ -969,7 +1032,8 @@ of the file.
                    - multiple durations means variable framing rate
                    - single duration means fixed framing rate
                    - calculate framing (fps): media units / (average) duration
-
+               }}}
+               {{{  stss
                * 8+ bytes optional sync sample (key/intra frame) box
                    = long unsigned offset + long ASCII text string 'stss'
                  -> 4 bytes version/flags = byte hex version + 24-bit hex flags
@@ -977,7 +1041,8 @@ of the file.
                  -> 4 bytes number of key frames = long unsigned total
                  -> 4+ bytes key/intra frame location = long unsigned framing time
                    - key/intra frame location according to sample/framing time
-
+               }}}
+               {{{  stsc
                * 8+ bytes sample/framing to chunk/block box
                    = long unsigned offset + long ASCII text string 'stsc'
                  -> 4 bytes version/flags = byte hex version + 24-bit hex flags
@@ -987,7 +1052,8 @@ of the file.
                       = long unsigned first/next block + long unsigned # of frames
                  -> 4+ bytes samples description id
                       = long unsigned description number
-
+               }}}
+               {{{  stsz
                * 8+ bytes sample (block byte) size box
                    = long unsigned offset + long ASCII text string 'stsz'
                  -> 4 bytes version/flags = byte hex version + 24-bit hex flags
@@ -996,23 +1062,29 @@ of the file.
                      (different sizes = 0)
                  -> 4 bytes number of block sizes = long unsigned total
                  -> 4+ bytes block byte sizes = long unsigned byte values
-
+               }}}
+               {{{  stco
                * 8+ bytes chunk/block offset box
                    = long unsigned offset + long ASCII text string 'stco'
                  -> 4 bytes number of offsets = long unsigned total
                  -> 4+ bytes block offsets = long unsigned byte values
-
+               }}}
+               {{{  co64
                * 8+ bytes larger chunk/block offset box
                    = long unsigned offset + long ASCII text string 'co64'
                  -> 4 bytes version/flags = byte hex version + 24-bit hex flags
                      (current = 0)
                  -> 4 bytes number of offsets = long unsigned total
                  -> 8+ bytes larger block offsets = 64-bit unsigned byte values
-
+               }}}
+            }}}
+         }}}
+      }}}
+      {{{  udta
       * 8+ bytes optional user data (any custom info) atom
           = long unsigned offset + long ASCII text string 'udta'
          (copyright and MPEG-7 meta data related to element tracks)
-
+         {{{  cprt
          * 8+ bytes optional copyright notice box
              = long unsigned offset + long ASCII text string 'cprt'
            -> 4 bytes version/flags = byte hex version + 24-bit hex flags
@@ -1022,12 +1094,13 @@ of the file.
              - example code for english = 0x15C7
            -> annotation string = ASCII text string
            -> 1 byte annotation c string end = byte value set to zero
-
+         }}}
+         {{{  meta
          * 8+ bytes optional ISO/IEC 14496-12 element meta data box
              = long unsigned offset + long ASCII text string 'meta'
            -> 4 bytes version/flags = byte hex version + 24-bit hex flags
                (current = 0)
-
+            {{{  hdlr
             * 8+ bytes ISO/IEC 14496-12 handler reference box
                 = long unsigned offset + long ASCII text string 'hdlr'
              - this box must be toward the start of the meta box
@@ -1046,46 +1119,51 @@ of the file.
               -> 1 byte component name string end = byte padding set to zero
                 - note: the quicktime spec uses a Pascal string
                         instead of the above C string
-
+            }}}
+            {{{  xml
             * 8+ bytes optional ISO/IEC 14496-12 MPEG-7 XML box
                 = long unsigned offset + long ASCII text string 'xml '
               -> 4 bytes version/flags = byte hex version + 24-bit hex flags
                   (current = 0)
               -> MPEG-7 XML meta data = text dump
-
+            }}}
+            {{{  bxml
             * 8+ bytes optional ISO/IEC 14496-12 MPEG-7 binary XML box
                 = long unsigned offset + long ASCII text string 'bxml'
               -> 4 bytes version/flags = byte hex version + 24-bit hex flags
                   (current = 0)
               -> MPEG-7 encoded XML meta data = hex dump
-
+            }}}
+            {{{  iloc
             * 8+ bytes optional ISO/IEC 14496-12 item location box
                 = long unsigned offset + long ASCII text string 'iloc'
               -> 4 bytes version/flags = byte hex version + 24-bit hex flags
                   (current = 0)
               -> 1 nibble size of access offsets = 4 bits one byte multiples
-                - 8-bit offset = 0 ; 32-bit offset = 4 ; 64-bit offset = 8  
+                - 8-bit offset = 0 ; 32-bit offset = 4 ; 64-bit offset = 8
               -> 1 nibble size of data lengths = 4 bits one byte multiples
-                - 8-bit offset = 0 ; 32-bit offset = 4 ; 64-bit offset = 8  
+                - 8-bit offset = 0 ; 32-bit offset = 4 ; 64-bit offset = 8
               -> 1 nibble size of starting offset = 4 bits one byte multiples
-                - 8-bit offset = 0 ; 32-bit offset = 4 ; 64-bit offset = 8  
+                - 8-bit offset = 0 ; 32-bit offset = 4 ; 64-bit offset = 8
               -> 1 nibble reserved = 4 bits set to zero
               -> 2 bytes number of locations = short unsigned index total
               -> 2+ bytes item reference = short unsigned id
               -> 2+ bytes stream data reference = short unsigned index from 'dref' box
-                - if meta data item in same file set to zero  
+                - if meta data item in same file set to zero
               -> 1-8+ bytes starting offset =  byte - dlong unsigned offset
               -> 2+ bytes number of access points = short unsigned index total
               -> 1-8+ bytes access offset =  byte - dlong unsigned relative offset
                   (relative to starting offset)
               -> 1-8+ bytes data length =  byte - dlong unsigned length
-
+            }}}
+            {{{  pitm
             * 8+ bytes optional ISO/IEC 14496-12 primary item box
                 = long unsigned offset + long ASCII text string 'pitm'
               -> 4 bytes version/flags = byte hex version + 24-bit hex flags
                   (current = 0)
               -> 2 bytes main item reference = short unsigned id
-
+            }}}
+            {{{  ipro
             * 8+ bytes optional ISO/IEC 14496-12 item encryption box
                 = long unsigned offset + long ASCII text string 'ipro'
               -> 4 bytes version/flags = byte hex version + 24-bit hex flags
@@ -1122,7 +1200,8 @@ of the file.
                   * 8+ bytes ISO/IEC 14496-12 scheme data box
                       = long unsigned offset + long ASCII text string 'schi'
                     -> encryption related key = hex dump
-
+            }}}
+            {{{  pitm
             * 8+ bytes optional ISO/IEC 14496-12 item information box
                 = long unsigned offset + long ASCII text string 'pitm'
               -> 4 bytes version/flags = byte hex version + 24-bit hex flags
@@ -1135,10 +1214,14 @@ of the file.
               -> 1 byte mime type c string end = byte value set to zero
               -> optional item transfer encoding string = UTF-8 text string
               -> 1 byte optional transfer encoding c string end = byte value set to zero
-
+            }}}
+         }}}
+      }}}
+   }}}
+   {{{  udta
    * 8+ bytes optional user data (any custom info) box
        = long unsigned offset + long ASCII text string 'udta'
-
+      {{{  cprt
       * 8+ bytes optional copyright notice box
           = long unsigned offset + long ASCII text string 'cprt'
         -> 4 bytes version/flags = byte hex version + 24-bit hex flags
@@ -1148,7 +1231,8 @@ of the file.
           - example code for english = 0x15C7
         -> annotation string = UTF text string
         -> 1 byte annotation c string end = byte value set to zero
-
+      }}}
+      {{{  dscp
       * 8+ bytes optional 3GPP notice box
           = long unsigned offset + long ASCII text string
        - box types are title = 'titl'; author = 'auth'; description = 'dscp'
@@ -1160,12 +1244,12 @@ of the file.
           - example code for english = 0x15C7
         -> annotation string = UTF text string
         -> 1 byte annotation c string end = byte value set to zero
-
+      }}}
       * 8+ bytes optional ISO/IEC 14496-12 presentation meta data box
           = long unsigned offset + long ASCII text string 'meta'
         -> 4 bytes version/flags = byte hex version + 24-bit hex flags
             (current = 0)
-
+         {{{  hdlr
          * 8+ bytes ISO/IEC 14496-12 handler reference box
              = long unsigned offset + long ASCII text string 'hdlr'
           - this box must be toward the start of the meta box
@@ -1185,51 +1269,59 @@ of the file.
              - note: the quicktime spec uses a Pascal string
                      instead of the above C string
 
+         }}}
+         {{{  xml
          * 8+ bytes optional ISO/IEC 14496-12 MPEG-7 XML box
              = long unsigned offset + long ASCII text string 'xml '
            -> 4 bytes version/flags = byte hex version + 24-bit hex flags
                (current = 0)
            -> MPEG-7 XML meta data = text dump
+         }}}
+         {{{  bxml
 
          * 8+ bytes optional ISO/IEC 14496-12 MPEG-7 binary XML box
              = long unsigned offset + long ASCII text string 'bxml'
            -> 4 bytes version/flags = byte hex version + 24-bit hex flags
                (current = 0)
            -> MPEG-7 encoded XML meta data = hex dump
-
+         }}}
+         {{{  iloc
          * 8+ bytes optional ISO/IEC 14496-12 item location box
              = long unsigned offset + long ASCII text string 'iloc'
            -> 4 bytes version/flags = byte hex version + 24-bit hex flags
                (current = 0)
            -> 1 nibble size of access offsets = 4 bits one byte multiples
-             - 8-bit offset = 0 ; 32-bit offset = 4 ; 64-bit offset = 8  
+             - 8-bit offset = 0 ; 32-bit offset = 4 ; 64-bit offset = 8
            -> 1 nibble size of data lengths = 4 bits one byte multiples
-             - 8-bit offset = 0 ; 32-bit offset = 4 ; 64-bit offset = 8  
+             - 8-bit offset = 0 ; 32-bit offset = 4 ; 64-bit offset = 8
            -> 1 nibble size of starting offset = 4 bits one byte multiples
-             - 8-bit offset = 0 ; 32-bit offset = 4 ; 64-bit offset = 8  
+             - 8-bit offset = 0 ; 32-bit offset = 4 ; 64-bit offset = 8
            -> 1 nibble reserved = 4 bits set to zero
            -> 2 bytes number of locations = short unsigned index total
            -> 2+ bytes item reference = short unsigned id
            -> 2+ bytes stream data reference = short unsigned index from 'dref' box
-             - if meta data item in same file set to zero  
+             - if meta data item in same file set to zero
            -> 1-8+ bytes starting offset =  byte - dlong unsigned offset
            -> 2+ bytes number of access points = short unsigned index total
            -> 1-8+ bytes access offset =  byte - dlong unsigned relative offset
                (relative to starting offset)
            -> 1-8+ bytes data length =  byte - dlong unsigned length
-
+         }}}
+         {{{  pitm
          * 8+ bytes optional ISO/IEC 14496-12 primary item box
              = long unsigned offset + long ASCII text string 'pitm'
            -> 4 bytes version/flags = byte hex version + 24-bit hex flags
                (current = 0)
            -> 2 bytes main item reference = short unsigned id
-
+         }}}
+         {{{  ipro
          * 8+ bytes optional ISO/IEC 14496-12 item encryption box
              = long unsigned offset + long ASCII text string 'ipro'
            -> 4 bytes version/flags = byte hex version + 24-bit hex flags
                (current = 0)
            -> 2 bytes number of encryption boxes = short unsigned index total
 
+            {{{  sinf
             * 8+ bytes ISO/IEC 14496-12 encryption scheme info box
                 = long unsigned offset + long ASCII text string 'sinf'
              - if meta data encrypted to ISO/IEC 14496-12 standards
@@ -1260,7 +1352,9 @@ of the file.
                * 8+ bytes ISO/IEC 14496-12 scheme data box
                    = long unsigned offset + long ASCII text string 'schi'
                  -> encryption related key = hex dump
+            }}}
 
+         {{{  pitm
          * 8+ bytes optional ISO/IEC 14496-12 item information box
              = long unsigned offset + long ASCII text string 'pitm'
            -> 4 bytes version/flags = byte hex version + 24-bit hex flags
@@ -1273,7 +1367,9 @@ of the file.
            -> 1 byte mime type c string end = byte value set to zero
            -> optional item transfer encoding string = UTF-8 text string
            -> 1 byte optional transfer encoding c string end = byte value set to zero
+         }}}
 
+         {{{  ilst
          * 8+ bytes optional APPLE item list box
              = long unsigned offset + long ASCII text string 'ilst'
 
@@ -1306,5 +1402,8 @@ of the file.
                  -> 4 bytes version/flags = byte hex version + 24-bit hex flags
                      (current version = 0 ; current flags = 0x000000)
                  -> string text = ASCII text dump
-
+         }}}
+         }}}
      -> 4 bytes compatibility utda end = long value set to zero
+   }}}
+}}}
