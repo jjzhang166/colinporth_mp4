@@ -117,7 +117,7 @@ private:
     } track_t;
   //}}}
 
-  //{{{  read, write
+  //{{{  seek, read, write
   int64_t getPosition();
   int32_t setPosition (const uint64_t position);
 

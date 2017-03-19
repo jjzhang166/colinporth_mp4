@@ -1,8 +1,6 @@
 // cMp4App.cpp
 //{{{  includes
 #define _CRT_SECURE_NO_WARNINGS
-#include <windows.h> // Sleep
-
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>
@@ -133,6 +131,6 @@ int main (int argc, char** argv) {
 
   fclose (mp4File);
 
-  Sleep (30000);
+  while (true) {}
   return 0;
   }

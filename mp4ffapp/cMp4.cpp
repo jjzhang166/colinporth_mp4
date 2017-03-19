@@ -573,7 +573,7 @@ int32_t cMp4::meta_update (const metadata_t* data) {
 //}}}
 
 // private
-//{{{  read, write
+//{{{  seek, read, write
 int64_t cMp4::getPosition() { return current_position; }
 //{{{
 int32_t cMp4::setPosition (const uint64_t position) {
