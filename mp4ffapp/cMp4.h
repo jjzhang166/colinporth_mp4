@@ -116,37 +116,59 @@ private:
     uint64_t duration;
     } track_t;
   //}}}
-  //{{{  struct membuffer
-  typedef struct {
-    void* data;
-    unsigned written;
-    unsigned allocated;
-    unsigned error;
-    } membuffer;
-  //}}}
 
   //{{{  read, write
   int64_t getPosition();
   int32_t setPosition (const uint64_t position);
 
   uint32_t readData (uint8_t* buffer, uint32_t size);
-
-  uint64_t read_int64();
-  uint32_t read_int32();
-  uint32_t read_int24();
-  uint16_t read_int16();
-
-  uint8_t read_char();
-  char* read_string (uint32_t length);
-
-  uint32_t read_mp4_descr_length();
-
+  uint8_t readChar();
+  uint16_t readInt16();
+  uint32_t readInt24();
+  uint32_t readInt32();
+  uint64_t readInt64();
+  uint32_t readMp4DescrLength();
+  char* readString (uint32_t length);
   uint64_t readAtomHeader (uint8_t* atom_type, uint8_t* header_size, int indent);
 
   // write
   int32_t truncate();
-  int32_t write_data (uint8_t* data, uint32_t size);
-  int32_t write_int32 (const uint32_t data);
+  int32_t writeData (uint8_t* data, uint32_t size);
+  int32_t writeInt32 (const uint32_t data);
+  //}}}
+  //{{{  membuffer
+  typedef struct {
+    void* data;
+    unsigned int written;
+    unsigned int allocated;
+    unsigned int error;
+    } membuffer_t;
+
+  membuffer_t* membuffer_create();
+  void membuffer_free (membuffer_t* buf);
+
+  void* membuffer_detach (membuffer_t* buf);
+  unsigned membuffer_error (const membuffer_t* buf);
+  void membuffer_set_error (membuffer_t* buf);
+
+  void* membuffer_get_ptr (const membuffer_t* buf);
+  unsigned membuffer_get_size (const membuffer_t* buf);
+
+  unsigned membufferWrite (membuffer_t* buf, const void* ptr, unsigned bytes);
+  unsigned membufferWriteInt32 (membuffer_t* buf, uint32_t data);
+  unsigned membufferWriteInt24 (membuffer_t* buf, uint32_t data);
+  unsigned membufferWriteInt16 (membuffer_t* buf, uint16_t data);
+  unsigned membufferWriteInt8 (membuffer_t* buf, uint8_t data);
+  unsigned membufferWrite_string (membuffer_t* buf, const char* data);
+
+  unsigned membufferWrite_atom_name (membuffer_t* buf, const char* data);
+  void membufferWrite_atom (membuffer_t* buf, const char* name, unsigned size, const void* data);
+
+  void membufferWrite_track_tag (membuffer_t* buf, const char* name, uint32_t index, uint32_t total);
+  void membufferWriteInt16_tag (membuffer_t* buf, const char* name, uint16_t value);
+  void membufferWrite_std_tag (membuffer_t* buf, const char* name, const char* value);
+
+  unsigned membuffer_transfer_from_file (membuffer_t* buf, unsigned bytes);
   //}}}
   //{{{  meta
   int32_t tag_add_field (metadata_t* tags, const char* item, const char* value);
@@ -157,44 +179,13 @@ private:
 
   int32_t parse_tag (uint8_t parent_atom_type, int32_t size);
   int32_t parse_metadata (int32_t size, int indent);
+
   int32_t meta_find_by_name (const char* item, char** value);
-
-  // membuffer
-  unsigned membuffer_write (membuffer* buf,const void* ptr,unsigned bytes);
-  unsigned membuffer_write_int32 (membuffer* buf, uint32_t data);
-  unsigned membuffer_write_int24 (membuffer* buf, uint32_t data);
-  unsigned membuffer_write_int16 (membuffer* buf, uint16_t data);
-
-  unsigned membuffer_write_atom_name (membuffer* buf, const char* data);
-  void membuffer_write_atom (membuffer* buf, const char* name, unsigned size, const void* data);
-
-  unsigned membuffer_write_string (membuffer* buf, const char* data);
-  unsigned membuffer_write_int8 (membuffer* buf, uint8_t data);
-
-  void* membuffer_get_ptr (const membuffer* buf);
-  unsigned membuffer_get_size (const membuffer* buf);
-
-  unsigned membuffer_error (const membuffer* buf);
-  void membuffer_set_error (membuffer* buf);
-
-  unsigned membuffer_transfer_from_file (membuffer* buf, unsigned bytes);
-
-  membuffer* membuffer_create();
-  void membuffer_free (membuffer* buf);
-  void* membuffer_detach (membuffer* buf);
-
-  const char* find_standard_meta (const char* name);
-
-  void membuffer_write_track_tag (membuffer* buf, const char* name, uint32_t index, uint32_t total);
-  void membuffer_write_int16_tag (membuffer* buf, const char* name, uint16_t value);
-  void membuffer_write_std_tag (membuffer* buf, const char* name, const char* value);
-  void membuffer_write_custom_tag (membuffer* buf, const char* name, const char* value);
-
-  // more meta
   uint32_t meta_genre_to_index (const char* genrestr);
 
   uint32_t find_atom (uint64_t base, uint32_t size, const char* name);
   uint32_t find_atom_v2 (uint64_t base, uint32_t size, const char* name, uint32_t extraheaders, const char* name_inside);
+  const char* findStandardMetaAtom (const char* name);
 
   uint32_t create_ilst (const metadata_t* data,void ** out_buffer, uint32_t* out_size);
   uint32_t create_meta (const metadata_t * data, void** out_buffer, uint32_t* out_size);
@@ -209,19 +200,19 @@ private:
   int32_t sample_to_offset (int track, int sample);
   //}}}
   //{{{  atom
-  int32_t read_stsz();
-  int32_t read_esds();
-  int32_t read_stsc();
-  int32_t read_stco();
-  int32_t read_ctts();
-  int32_t read_stts();
-  int32_t read_mvhd();
-  int32_t read_tkhd();
-  int32_t read_mdhd();
+  int32_t readStsz();
+  int32_t readEsds();
+  int32_t readStsc();
+  int32_t readStco();
+  int32_t readCtts();
+  int32_t readStts();
+  int32_t readMvhd();
+  int32_t readTkhd();
+  int32_t readMdhd();
 
-  int32_t read_mp4a (int indent);
-  int32_t read_meta (uint64_t size, int indent);
-  int32_t read_stsd (int indent);
+  int32_t readMp4a (int indent);
+  int32_t readMeta (uint64_t size, int indent);
+  int32_t readStsd (int indent);
 
   int32_t parseAtom (int32_t size, uint8_t atom_type, int indent);
 

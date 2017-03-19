@@ -1536,7 +1536,7 @@ int main (int argc, char** argv)
 
     delete file;
 
-    Sleep (10000);
+    Sleep (30000);
     return 0;
 }
 //}}}

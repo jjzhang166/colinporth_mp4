@@ -272,7 +272,7 @@ int32_t cMp4::getVideoTrack() {
   }
 //}}}
 
-// per track gets
+// track gets
 //{{{
 int32_t cMp4::getNumSamples (int track) {
 
@@ -550,19 +550,19 @@ int32_t cMp4::meta_update (const metadata_t* data) {
 
     /* rename old moov to free */
     setPosition (moov_offset + 4);
-    write_data ((uint8_t*)free_data, 4);
+    writeData((uint8_t*)free_data, 4);
 
     setPosition (file_size);
-    write_int32 (new_moov_size + 8);
-    write_data ((uint8_t*)"moov",4);
-    write_data (new_moov_data, new_moov_size);
+    writeInt32 (new_moov_size + 8);
+    writeData((uint8_t*)"moov",4);
+    writeData(new_moov_data, new_moov_size);
     }
 
   else {
     setPosition (moov_offset);
-    write_int32 (new_moov_size + 8);
-    write_data ((uint8_t*)"moov",4);
-    write_data (new_moov_data, new_moov_size);
+    writeInt32 (new_moov_size + 8);
+    writeData((uint8_t*)"moov",4);
+    writeData(new_moov_data, new_moov_size);
     }
 
   truncate();
@@ -592,9 +592,40 @@ uint32_t cMp4::readData (uint8_t* buffer, uint32_t size) {
   return (uint32_t)result;
   }
 //}}}
-
 //{{{
-uint64_t cMp4::read_int64() {
+uint8_t cMp4::readChar() {
+
+  uint8_t output;
+  readData (&output, 1);
+  return output;
+  }
+//}}}
+//{{{
+uint16_t cMp4::readInt16() {
+
+  uint8_t data[2];
+  readData (data, 2);
+  return (data[0]<<8) | data[1];
+  }
+//}}}
+//{{{
+uint32_t cMp4::readInt24() {
+
+  uint8_t data[3];
+  readData (data, 3);
+  return (data[0]<<16) | (data[1]<<8) | data[2];
+  }
+//}}}
+//{{{
+uint32_t cMp4::readInt32() {
+
+  uint8_t data[4];
+  readData (data, 4);
+  return (data[0]<<24) | (data[1]<<16) | (data[2]<<8) | data[3];
+  }
+//}}}
+//{{{
+uint64_t cMp4::readInt64() {
 
   uint8_t data[8];
   readData (data, 8);
@@ -607,40 +638,23 @@ uint64_t cMp4::read_int64() {
   }
 //}}}
 //{{{
-uint32_t cMp4::read_int32() {
+uint32_t cMp4::readMp4DescrLength() {
 
-  uint8_t data[4];
-  readData (data, 4);
-  return (data[0]<<24) | (data[1]<<16) | (data[2]<<8) | data[3];
+  uint8_t b;
+  uint8_t numBytes = 0;
+  uint32_t length = 0;
+
+  do {
+    b = readChar();
+    numBytes++;
+    length = (length << 7) | (b & 0x7F);
+    } while ((b & 0x80) && numBytes < 4);
+
+  return length;
   }
 //}}}
 //{{{
-uint32_t cMp4::read_int24() {
-
-  uint8_t data[3];
-  readData (data, 3);
-  return (data[0]<<16) | (data[1]<<8) | data[2];
-  }
-//}}}
-//{{{
-uint16_t cMp4::read_int16() {
-
-  uint8_t data[2];
-  readData (data, 2);
-  return (data[0]<<8) | data[1];
-  }
-//}}}
-
-//{{{
-uint8_t cMp4::read_char() {
-
-  uint8_t output;
-  readData (&output, 1);
-  return output;
-  }
-//}}}
-//{{{
-char* cMp4::read_string (uint32_t length) {
+char* cMp4::readString (uint32_t length) {
 
   auto str = (uint8_t*)malloc (length + 1);
   if ((uint32_t)readData (str, length) != length) {
@@ -651,24 +665,6 @@ char* cMp4::read_string (uint32_t length) {
   return (char*)str;
   }
 //}}}
-
-//{{{
-uint32_t cMp4::read_mp4_descr_length() {
-
-  uint8_t b;
-  uint8_t numBytes = 0;
-  uint32_t length = 0;
-
-  do {
-    b = read_char();
-    numBytes++;
-    length = (length << 7) | (b & 0x7F);
-    } while ((b & 0x80) && numBytes < 4);
-
-  return length;
-  }
-//}}}
-
 //{{{
 uint64_t cMp4::readAtomHeader (uint8_t* atom_type, uint8_t* header_size, int indent)  {
 // read atom header, return atom size, atom size is with header included
@@ -690,7 +686,7 @@ uint64_t cMp4::readAtomHeader (uint8_t* atom_type, uint8_t* header_size, int ind
   if (size == 1) {
     // 64 bit atom size
     *header_size = 16;
-    size = read_int64();
+    size = readInt64();
     }
   else
     *header_size = 8;
@@ -723,7 +719,7 @@ int32_t cMp4::truncate() {
   }
 //}}}
 //{{{
-int32_t cMp4::write_data (uint8_t* data, uint32_t size) {
+int32_t cMp4::writeData (uint8_t* data, uint32_t size) {
 
   int32_t result = 1;
   //result = write (file, data, size);
@@ -733,7 +729,7 @@ int32_t cMp4::write_data (uint8_t* data, uint32_t size) {
   }
 //}}}
 //{{{
-int32_t cMp4::write_int32 (const uint32_t data) {
+int32_t cMp4::writeInt32 (const uint32_t data) {
 
   int8_t temp[4];
   *(uint32_t*)temp = data;
@@ -743,7 +739,193 @@ int32_t cMp4::write_int32 (const uint32_t data) {
   uint32_t d = temp[3];
 
   uint32_t result = (a<<24) | (b<<16) | (c<<8) | d;
-  return write_data ((uint8_t*)&result, sizeof (result));
+  return writeData ((uint8_t*)&result, sizeof (result));
+  }
+//}}}
+//}}}
+//{{{  membuffer
+//{{{
+cMp4::membuffer_t* cMp4::membuffer_create() {
+
+  const unsigned initial_size = 256;
+  membuffer_t* buf = (membuffer_t*)malloc(sizeof(membuffer_t));
+  buf->data = malloc(initial_size);
+  buf->written = 0;
+  buf->allocated = initial_size;
+  buf->error = buf->data == 0 ? 1 : 0;
+
+  return buf;
+  }
+//}}}
+//{{{
+void cMp4::membuffer_free (membuffer_t* buf) {
+  free (buf->data);
+  free (buf);
+  }
+//}}}
+
+//{{{
+void* cMp4::membuffer_detach (membuffer_t* buf) {
+
+  if (buf->error)
+    return 0;
+
+  void* ret = realloc (buf->data, buf->written);
+  if (ret == 0)
+    free (buf->data);
+
+  buf->data = 0;
+  buf->error = 1;
+
+  return ret;
+  }
+//}}}
+unsigned cMp4::membuffer_error (const membuffer_t* buf) { return buf->error; }
+void cMp4::membuffer_set_error (membuffer_t* buf) { buf->error = 1; }
+
+void* cMp4::membuffer_get_ptr (const membuffer_t* buf) { return buf->data; }
+unsigned cMp4::membuffer_get_size (const membuffer_t* buf) { return buf->written; }
+
+//{{{
+unsigned cMp4::membufferWrite (membuffer_t * buf,const void * ptr,unsigned bytes) {
+
+  if (buf->error)
+    return 0;
+
+  unsigned dest_size = buf->written + bytes;
+  if (dest_size > buf->allocated) {
+    do {
+      buf->allocated <<= 1;
+      } while (dest_size > buf->allocated);
+
+    {
+      void* newptr = realloc (buf->data, buf->allocated);
+      if (newptr == 0) {
+        free (buf->data);
+        buf->data = 0;
+        buf->error = 1;
+        return 0;
+        }
+      buf->data = newptr;
+      }
+    }
+
+  if (ptr)
+    memcpy ((char*)buf->data + buf->written,ptr,bytes);
+  buf->written += bytes;
+
+  return bytes;
+  }
+//}}}
+//{{{
+unsigned cMp4::membufferWriteInt32 (membuffer_t* buf, uint32_t data) {
+
+  uint8_t temp[4] = {(uint8_t)(data>>24),(uint8_t)(data>>16),(uint8_t)(data>>8),(uint8_t)data};
+  return membufferWrite (buf, temp, 4);
+  }
+//}}}
+//{{{
+unsigned cMp4::membufferWriteInt24 (membuffer_t* buf, uint32_t data) {
+
+  uint8_t temp[3] = {(uint8_t)(data>>16),(uint8_t)(data>>8),(uint8_t)data};
+  return membufferWrite (buf, temp, 3);
+  }
+//}}}
+//{{{
+unsigned cMp4::membufferWriteInt16 (membuffer_t* buf, uint16_t data) {
+
+  uint8_t temp[2] = {(uint8_t)(data>>8),(uint8_t)data};
+  return membufferWrite (buf, temp, 2);
+  }
+//}}}
+//{{{
+unsigned cMp4::membufferWriteInt8 (membuffer_t* buf, uint8_t data) {
+  return membufferWrite (buf, &data, 1);
+  }
+//}}}
+//{{{
+unsigned cMp4::membufferWrite_string (membuffer_t* buf, const char* data) {
+  return membufferWrite (buf, data, (uint32_t)strlen(data));
+  }
+//}}}
+
+//{{{
+unsigned cMp4::membufferWrite_atom_name (membuffer_t* buf, const char * data) {
+  return membufferWrite (buf, data, 4) == 4 ? 1 : 0;
+  }
+//}}}
+//{{{
+void cMp4::membufferWrite_atom (membuffer_t* buf, const char* name, unsigned size, const void* data) {
+
+  membufferWriteInt32 (buf, size + 8);
+  membufferWrite_atom_name (buf, name);
+  membufferWrite (buf, data, size);
+  }
+//}}}
+
+//{{{
+void cMp4::membufferWrite_track_tag (membuffer_t* buf, const char* name, uint32_t index, uint32_t total) {
+
+  membufferWriteInt32 (buf,8 /*atom header*/ + 8 /*data atom header*/ + 8 /*flags + reserved*/ + 8 /*actual data*/ );
+  membufferWrite_atom_name (buf,name);
+  membufferWriteInt32 (buf,8 /*data atom header*/ + 8 /*flags + reserved*/ + 8 /*actual data*/ );
+  membufferWrite_atom_name (buf,"data");
+  membufferWriteInt32 (buf,0);//flags
+  membufferWriteInt32 (buf,0);//reserved
+  membufferWriteInt16 (buf,0);
+  membufferWriteInt16 (buf,(uint16_t)index);//track number
+  membufferWriteInt16 (buf,(uint16_t)total);//total tracks
+  membufferWriteInt16 (buf,0);
+  }
+//}}}
+//{{{
+void cMp4::membufferWriteInt16_tag (membuffer_t* buf, const char* name, uint16_t value) {
+
+  membufferWriteInt32 (buf, 8 /*atom header*/ + 8 /*data atom header*/ + 8 /*flags + reserved*/ + 2 /*actual data*/ );
+  membufferWrite_atom_name (buf,name);
+  membufferWriteInt32 (buf, 8 /*data atom header*/ + 8 /*flags + reserved*/ + 2 /*actual data*/ );
+  membufferWrite_atom_name (buf, "data");
+  membufferWriteInt32 (buf, 0);//flags
+  membufferWriteInt32 (buf, 0);//reserved
+  membufferWriteInt16 (buf, value);//value
+  }
+//}}}
+//{{{
+void cMp4::membufferWrite_std_tag (membuffer_t* buf, const char* name, const char* value) {
+/* added by AJS */
+
+  uint32_t flags = 1;
+  /* special check for compilation flag */
+  if ( strcmp(name, "cpil") == 0)
+    flags = 21;
+
+  membufferWriteInt32 (buf, 8 /*atom header*/ + 8 /*data atom header*/ + 8 /*flags + reserved*/ + (uint32_t)strlen(value) );
+  membufferWrite_atom_name (buf,name);
+  membufferWriteInt32 (buf, 8 /*data atom header*/ + 8 /*flags + reserved*/ + (uint32_t)strlen(value));
+  membufferWrite_atom_name (buf,"data");
+  membufferWriteInt32 (buf, flags);//flags
+  membufferWriteInt32 (buf, 0);//reserved
+  membufferWrite (buf, value, (uint32_t)strlen(value));
+  }
+//}}}
+
+//{{{
+unsigned cMp4::membuffer_transfer_from_file (membuffer_t* buf, unsigned bytes) {
+
+  unsigned oldsize = membuffer_get_size (buf);
+  if (membufferWrite (buf, 0, bytes) != bytes)
+    return 0;
+
+  void* bufptr = membuffer_get_ptr (buf);
+  if (bufptr == 0)
+    return 0;
+
+  if ((unsigned)readData ((uint8_t*)bufptr + oldsize, bytes) != bytes) {
+    membuffer_set_error (buf);
+    return 0;
+    }
+
+  return bytes;
   }
 //}}}
 //}}}
@@ -865,14 +1047,14 @@ int32_t cMp4::parse_tag (uint8_t parent_atom_type, int32_t size) {
     destpos = getPosition() + subsize-header_size;
     if (!done) {
       if (atom_type == ATOM_DATA) {
-        read_char(); /* version */
-        read_int24(); /* flags */
-        read_int32(); /* reserved */
+        readChar(); /* version */
+        readInt24(); /* flags */
+        readInt32(); /* reserved */
 
         /* some need special attention */
         if (parent_atom_type == ATOM_GENRE2 || parent_atom_type == ATOM_TEMPO) {
           if (subsize - header_size >= 8 + 2) {
-            uint16_t val = read_int16();
+            uint16_t val = readInt16();
 
             if (parent_atom_type == ATOM_TEMPO) {
               char temp[16];
@@ -899,11 +1081,11 @@ int32_t cMp4::parse_tag (uint8_t parent_atom_type, int32_t size) {
           {
             uint16_t index,total;
             char temp[32];
-            read_int16();
-            index = read_int16();
-            total = read_int16();
+            readInt16();
+            index = readInt16();
+            total = readInt16();
               /* modified by AJS */
-            /* read_int16(); */
+            /* readInt16(); */
 
             sprintf (temp, "%d",index);
             tag_add_field (&(tags), parent_atom_type == ATOM_TRACK ? "track" : "disc", temp);
@@ -917,15 +1099,15 @@ int32_t cMp4::parse_tag (uint8_t parent_atom_type, int32_t size) {
           }
         else {
           free (data);
-          data = read_string ((uint32_t)(subsize-(header_size+8)));
+          data = readString ((uint32_t)(subsize-(header_size+8)));
           }
         }
       else if (atom_type == ATOM_NAME) {
         if (!done) {
-          read_char(); /* version */
-          read_int24(); /* flags */
+          readChar(); /* version */
+          readInt24(); /* flags */
           if (name) free(name);
-          name = read_string ((uint32_t)(subsize-(header_size+4)));
+          name = readString ((uint32_t)(subsize-(header_size+4)));
           }
         }
       setPosition(destpos);
@@ -989,219 +1171,6 @@ int32_t cMp4::meta_find_by_name (const char* item, char** value) {
   return 0;
   }
 //}}}
-
-//{{{
-unsigned cMp4::membuffer_write (membuffer * buf,const void * ptr,unsigned bytes) {
-
-  unsigned dest_size = buf->written + bytes;
-
-  if (buf->error)
-    return 0;
-  if (dest_size > buf->allocated) {
-    do {
-      buf->allocated <<= 1;
-      } while(dest_size > buf->allocated);
-
-    {
-      void * newptr = realloc(buf->data,buf->allocated);
-      if (newptr == 0) {
-        free(buf->data);
-        buf->data = 0;
-        buf->error = 1;
-        return 0;
-        }
-      buf->data = newptr;
-      }
-    }
-
-  if (ptr)
-    memcpy((char*)buf->data + buf->written,ptr,bytes);
-  buf->written += bytes;
-  return bytes;
-  }
-//}}}
-//{{{
-unsigned cMp4::membuffer_write_int32 (membuffer* buf, uint32_t data) {
-
-  uint8_t temp[4] = {(uint8_t)(data>>24),(uint8_t)(data>>16),(uint8_t)(data>>8),(uint8_t)data};
-  return membuffer_write(buf,temp,4);
-  }
-//}}}
-//{{{
-unsigned cMp4::membuffer_write_int24 (membuffer* buf, uint32_t data) {
-
-  uint8_t temp[3] = {(uint8_t)(data>>16),(uint8_t)(data>>8),(uint8_t)data};
-  return membuffer_write(buf,temp,3);
-  }
-//}}}
-//{{{
-unsigned cMp4::membuffer_write_int16 (membuffer* buf, uint16_t data) {
-
-  uint8_t temp[2] = {(uint8_t)(data>>8),(uint8_t)data};
-    return membuffer_write(buf,temp,2);
-}
-//}}}
-//{{{
-unsigned cMp4::membuffer_write_atom_name (membuffer* buf, const char * data) {
-  return membuffer_write(buf,data,4)==4 ? 1 : 0;
-  }
-//}}}
-//{{{
-void cMp4::membuffer_write_atom (membuffer* buf, const char* name, unsigned size, const void* data) {
-
-  membuffer_write_int32 (buf, size + 8);
-  membuffer_write_atom_name (buf, name);
-  membuffer_write (buf, data, size);
-  }
-//}}}
-//{{{
-unsigned cMp4::membuffer_write_string (membuffer* buf, const char* data) {
-  return membuffer_write (buf, data, (uint32_t)strlen(data));
-  }
-//}}}
-//{{{
-unsigned cMp4::membuffer_write_int8 (membuffer* buf, uint8_t data) {
-  return membuffer_write (buf, &data, 1);
-  }
-//}}}
-
-void* cMp4::membuffer_get_ptr (const membuffer* buf) { return buf->data; }
-unsigned cMp4::membuffer_get_size (const membuffer* buf) { return buf->written; }
-unsigned cMp4::membuffer_error (const membuffer* buf) { return buf->error; }
-void cMp4::membuffer_set_error (membuffer* buf) { buf->error = 1; }
-
-//{{{
-unsigned cMp4::membuffer_transfer_from_file (membuffer* buf, unsigned bytes) {
-
-  unsigned oldsize = membuffer_get_size (buf);
-  if (membuffer_write (buf, 0, bytes) != bytes)
-    return 0;
-
-  void* bufptr = membuffer_get_ptr (buf);
-  if (bufptr == 0)
-    return 0;
-
-  if ((unsigned)readData ((uint8_t*)bufptr + oldsize, bytes) != bytes) {
-    membuffer_set_error (buf);
-    return 0;
-    }
-
-  return bytes;
-  }
-//}}}
-//{{{
-cMp4::membuffer* cMp4::membuffer_create() {
-
-  const unsigned initial_size = 256;
-  membuffer* buf = (membuffer*) malloc(sizeof(membuffer));
-  buf->data = malloc(initial_size);
-  buf->written = 0;
-  buf->allocated = initial_size;
-  buf->error = buf->data == 0 ? 1 : 0;
-
-  return buf;
-  }
-//}}}
-//{{{
-void cMp4::membuffer_free (membuffer* buf) {
-  free (buf->data);
-  free (buf);
-  }
-//}}}
-//{{{
-void* cMp4::membuffer_detach (membuffer* buf) {
-
-  if (buf->error)
-    return 0;
-
-  void* ret = realloc(buf->data,buf->written);
-
-  if (ret == 0)
-    free (buf->data);
-
-  buf->data = 0;
-  buf->error = 1;
-
-  return ret;
-  }
-//}}}
-
-//{{{
-const char* cMp4::find_standard_meta (const char* name) {
-// returns atom name if found, 0 if not
-
-  for (unsigned int n = 0; n < sizeof (kStandardMetaItems) / sizeof(standardMetaItem_t); n++)
-    if (!_stricmp (name, kStandardMetaItems[n].name))
-      return kStandardMetaItems[n].atom;
-    return 0;
-  }
-//}}}
-//{{{
-void cMp4::membuffer_write_track_tag (membuffer* buf, const char* name, uint32_t index, uint32_t total) {
-
-  membuffer_write_int32 (buf,8 /*atom header*/ + 8 /*data atom header*/ + 8 /*flags + reserved*/ + 8 /*actual data*/ );
-  membuffer_write_atom_name (buf,name);
-  membuffer_write_int32 (buf,8 /*data atom header*/ + 8 /*flags + reserved*/ + 8 /*actual data*/ );
-  membuffer_write_atom_name (buf,"data");
-  membuffer_write_int32 (buf,0);//flags
-  membuffer_write_int32 (buf,0);//reserved
-  membuffer_write_int16 (buf,0);
-  membuffer_write_int16 (buf,(uint16_t)index);//track number
-  membuffer_write_int16 (buf,(uint16_t)total);//total tracks
-  membuffer_write_int16 (buf,0);
-  }
-//}}}
-//{{{
-void cMp4::membuffer_write_int16_tag (membuffer* buf, const char* name, uint16_t value) {
-
-  membuffer_write_int32 (buf,8 /*atom header*/ + 8 /*data atom header*/ + 8 /*flags + reserved*/ + 2 /*actual data*/ );
-  membuffer_write_atom_name (buf,name);
-  membuffer_write_int32 (buf,8 /*data atom header*/ + 8 /*flags + reserved*/ + 2 /*actual data*/ );
-  membuffer_write_atom_name (buf,"data");
-  membuffer_write_int32 (buf,0);//flags
-  membuffer_write_int32 (buf,0);//reserved
-  membuffer_write_int16 (buf,value);//value
-  }
-//}}}
-//{{{
-void cMp4::membuffer_write_std_tag (membuffer* buf, const char* name, const char* value) {
-/* added by AJS */
-
-  uint32_t flags = 1;
-  /* special check for compilation flag */
-  if ( strcmp(name, "cpil") == 0)
-    flags = 21;
-
-  membuffer_write_int32 (buf, 8 /*atom header*/ + 8 /*data atom header*/ + 8 /*flags + reserved*/ + (uint32_t)strlen(value) );
-  membuffer_write_atom_name (buf,name);
-  membuffer_write_int32 (buf, 8 /*data atom header*/ + 8 /*flags + reserved*/ + (uint32_t)strlen(value));
-  membuffer_write_atom_name (buf,"data");
-  membuffer_write_int32 (buf, flags);//flags
-  membuffer_write_int32 (buf, 0);//reserved
-  membuffer_write (buf, value, (uint32_t)strlen(value));
-  }
-//}}}
-//{{{
-void cMp4::membuffer_write_custom_tag (membuffer* buf, const char* name, const char* value) {
-
-  membuffer_write_int32 (buf,8 /*atom header*/ + 0x1C /*weirdo itunes atom*/ + 12 /*name atom header*/ + (uint32_t)strlen(name) + 16 /*data atom header + flags*/ + (uint32_t)strlen(value) );
-  membuffer_write_atom_name (buf,"----");
-  membuffer_write_int32 (buf, 0x1C);//weirdo itunes atom
-  membuffer_write_atom_name (buf,"mean");
-  membuffer_write_int32 (buf,0);
-  membuffer_write (buf,"com.apple.iTunes",16);
-  membuffer_write_int32 (buf,12 + (uint32_t)strlen(name));
-  membuffer_write_atom_name (buf,"name");
-  membuffer_write_int32 (buf,0);
-  membuffer_write (buf,name, (uint32_t)strlen(name));
-  membuffer_write_int32 (buf,8 /*data atom header*/ + 8 /*flags + reserved*/ + (uint32_t)strlen(value));
-  membuffer_write_atom_name (buf,"data");
-  membuffer_write_int32 (buf,1);//flags
-  membuffer_write_int32 (buf,0);//reserved
-  membuffer_write (buf,value, (uint32_t)strlen(value));
-  }
-//}}}
-
 //{{{
 uint32_t cMp4::meta_genre_to_index (const char* genrestr) {
 
@@ -1226,7 +1195,7 @@ uint32_t cMp4::find_atom (uint64_t base, uint32_t size, const char* name) {
     setPosition (atom_offset);
 
     if (remaining < 8) break;
-    atom_size = read_int32();
+    atom_size = readInt32();
     if (atom_size > remaining || atom_size < 8) break;
     readData (atom_name,4);
 
@@ -1249,7 +1218,7 @@ uint32_t cMp4::find_atom_v2 (uint64_t base, uint32_t size, const char* name,
   uint64_t first_base = (uint64_t)(-1);
   while (find_atom (base,size,name)) { //try to find atom <name> with atom <name_inside> in it
     uint64_t mybase = getPosition();
-    uint32_t mysize = read_int32();
+    uint32_t mysize = readInt32();
 
     if (first_base == (uint64_t)(-1))
       first_base = mybase;
@@ -1277,11 +1246,21 @@ uint32_t cMp4::find_atom_v2 (uint64_t base, uint32_t size, const char* name,
     return 0;
   }
 //}}}
+//{{{
+const char* cMp4::findStandardMetaAtom (const char* name) {
+// returns atom name if found, 0 if not
+
+  for (unsigned int n = 0; n < sizeof (kStandardMetaItems) / sizeof(standardMetaItem_t); n++)
+    if (!_stricmp (name, kStandardMetaItems[n].name))
+      return kStandardMetaItems[n].atom;
+    return 0;
+  }
+//}}}
 
 //{{{
 uint32_t cMp4::create_ilst (const metadata_t* data, void** out_buffer, uint32_t* out_size) {
 
-  membuffer* buf = membuffer_create();
+  membuffer_t* buf = membuffer_create();
   unsigned metaptr;
   char* mask = (char*)malloc (data->count);
   memset (mask,0,data->count);
@@ -1324,29 +1303,27 @@ uint32_t cMp4::create_ilst (const metadata_t* data, void** out_buffer, uint32_t*
       }
 
     if (tracknumber_ptr)
-      membuffer_write_track_tag (buf, "trkn", myatoi (tracknumber_ptr), myatoi (totaltracks_ptr));
+      membufferWrite_track_tag (buf, "trkn", myatoi (tracknumber_ptr), myatoi (totaltracks_ptr));
     if (discnumber_ptr)
-      membuffer_write_track_tag (buf, "disk", myatoi (discnumber_ptr), myatoi (totaldiscs_ptr));
+      membufferWrite_track_tag (buf, "disk", myatoi (discnumber_ptr), myatoi (totaldiscs_ptr));
     if (tempo_ptr)
-      membuffer_write_int16_tag (buf, "tmpo", (uint16_t)myatoi (tempo_ptr));
+      membufferWriteInt16_tag (buf, "tmpo", (uint16_t)myatoi (tempo_ptr));
 
     if (genre_ptr) {
       uint32_t index = meta_genre_to_index (genre_ptr);
       if (index == 0)
-        membuffer_write_std_tag (buf, "©gen", genre_ptr);
+        membufferWrite_std_tag (buf, "©gen", genre_ptr);
       else
-        membuffer_write_int16_tag (buf, "gnre", (uint16_t)index);
+        membufferWriteInt16_tag (buf, "gnre", (uint16_t)index);
       }
     }
 
   for(metaptr = 0; metaptr < data->count; metaptr++) {
     if (!mask[metaptr]) {
       tag_t* tag = &data->tags[metaptr];
-      const char* std_meta_atom = find_standard_meta (tag->item);
-      if (std_meta_atom)
-        membuffer_write_std_tag (buf, std_meta_atom, tag->value);
-      else
-        membuffer_write_custom_tag (buf, tag->item, tag->value);
+      const char* standardMetaAtom = findStandardMetaAtom (tag->item);
+      if (standardMetaAtom)
+        membufferWrite_std_tag (buf, standardMetaAtom, tag->value);
       }
     }
 
@@ -1372,10 +1349,10 @@ uint32_t cMp4::create_meta (const metadata_t* data, void** out_buffer, uint32_t*
   if (!create_ilst (data, &ilst_buffer, &ilst_size))
     return 0;
 
-  membuffer* buf = membuffer_create();
+  membuffer_t* buf = membuffer_create();
 
-  membuffer_write_int32 (buf, 0);
-  membuffer_write_atom (buf, "ilst", ilst_size, ilst_buffer);
+  membufferWriteInt32 (buf, 0);
+  membufferWrite_atom (buf, "ilst", ilst_size, ilst_buffer);
   free (ilst_buffer);
 
   *out_size = membuffer_get_size(buf);
@@ -1388,7 +1365,7 @@ uint32_t cMp4::create_meta (const metadata_t* data, void** out_buffer, uint32_t*
 //{{{
 uint32_t cMp4::create_udta (const metadata_t* data, void** out_buffer, uint32_t* out_size) {
 
-  membuffer* buf;
+  membuffer_t* buf;
   uint32_t meta_size;
   void* meta_buffer;
 
@@ -1397,7 +1374,7 @@ uint32_t cMp4::create_udta (const metadata_t* data, void** out_buffer, uint32_t*
 
   buf = membuffer_create();
 
-  membuffer_write_atom (buf, "meta", meta_size,meta_buffer);
+  membufferWrite_atom (buf, "meta", meta_size,meta_buffer);
 
   free (meta_buffer);
 
@@ -1428,11 +1405,11 @@ uint32_t cMp4::modify_moov (const metadata_t* data, uint8_t** out_buffer, uint32
     if (!create_udta (data, &new_udta_buffer, &new_udta_size))
       return 0;
 
-    membuffer* buf = membuffer_create();
+    membuffer_t* buf = membuffer_create();
     setPosition (total_base);
     membuffer_transfer_from_file (buf, total_size);
 
-    membuffer_write_atom (buf, "udta", new_udta_size,  new_udta_buffer);
+    membufferWrite_atom (buf, "udta", new_udta_size,  new_udta_buffer);
 
     free (new_udta_buffer);
 
@@ -1444,22 +1421,22 @@ uint32_t cMp4::modify_moov (const metadata_t* data, uint8_t** out_buffer, uint32
 
   else {
     udta_offset = getPosition();
-    udta_size = read_int32();
+    udta_size = readInt32();
     if (!find_atom_v2 (udta_offset + 8, udta_size - 8, "meta", 4, "ilst")) {
       void* new_meta_buffer;
       uint32_t new_meta_size;
       if (!create_meta (data, &new_meta_buffer, &new_meta_size))
         return 0;
 
-      membuffer* buf = membuffer_create();
+      membuffer_t* buf = membuffer_create();
       setPosition (total_base);
       membuffer_transfer_from_file (buf, (uint32_t)(udta_offset - total_base));
 
-      membuffer_write_int32(buf,udta_size + 8 + new_meta_size);
-      membuffer_write_atom_name(buf,"udta");
+      membufferWriteInt32(buf,udta_size + 8 + new_meta_size);
+      membufferWrite_atom_name(buf,"udta");
       membuffer_transfer_from_file (buf,udta_size);
 
-      membuffer_write_atom (buf, "meta", new_meta_size, new_meta_buffer);
+      membufferWrite_atom (buf, "meta", new_meta_size, new_meta_buffer);
       free (new_meta_buffer);
 
       *out_size = membuffer_get_size(buf);
@@ -1469,11 +1446,11 @@ uint32_t cMp4::modify_moov (const metadata_t* data, uint8_t** out_buffer, uint32
       }
 
     meta_offset = getPosition();
-    meta_size = read_int32();
+    meta_size = readInt32();
     if (!find_atom (meta_offset + 12, meta_size - 12, "ilst"))
       return 0;//shouldn't happen, find_atom_v2 above takes care of it
     ilst_offset = getPosition();
-    ilst_size = read_int32();
+    ilst_size = readInt32();
 
     if (!create_ilst (data, &new_ilst_buffer, &new_ilst_size))
       return 0;
@@ -1492,19 +1469,19 @@ uint32_t cMp4::modify_moov (const metadata_t* data, uint8_t** out_buffer, uint32
     setPosition (total_base);
     readData (p_out,(uint32_t)(udta_offset - total_base ));
     p_out += (uint32_t)(udta_offset - total_base );
-    *(uint32_t*)p_out = fixByteOrder32 (read_int32() + size_delta);
+    *(uint32_t*)p_out = fixByteOrder32 (readInt32() + size_delta);
     p_out += 4;
 
     readData(p_out,4); p_out += 4;
     readData(p_out,(uint32_t)(meta_offset - udta_offset - 8));
     p_out += (uint32_t)(meta_offset - udta_offset - 8);
-    *(uint32_t*)p_out = fixByteOrder32 (read_int32() + size_delta);
+    *(uint32_t*)p_out = fixByteOrder32 (readInt32() + size_delta);
     p_out += 4;
 
     readData(p_out,4); p_out += 4;
     readData(p_out,(uint32_t)(ilst_offset - meta_offset - 8));
     p_out += (uint32_t)(ilst_offset - meta_offset - 8);
-    *(uint32_t*)p_out = fixByteOrder32 (read_int32() + size_delta);
+    *(uint32_t*)p_out = fixByteOrder32 (readInt32() + size_delta);
     p_out += 4;
     readData(p_out,4); p_out += 4;
 
@@ -1608,63 +1585,63 @@ int32_t cMp4::sample_to_offset (int track, int sample) {
 //}}}
 //{{{  atom
 //{{{
-int32_t cMp4::read_stsz() {
+int32_t cMp4::readStsz() {
 
-  read_char(); /* version */
-  read_int24(); /* flags */
+  readChar(); /* version */
+  readInt24(); /* flags */
 
-  tracks[numTracks - 1]->stsz_sample_size = read_int32();
-  tracks[numTracks - 1]->stsz_sample_count = read_int32();
+  tracks[numTracks - 1]->stsz_sample_size = readInt32();
+  tracks[numTracks - 1]->stsz_sample_count = readInt32();
 
   if (tracks[numTracks - 1]->stsz_sample_size == 0) {
     tracks[numTracks - 1]->stsz_table = (int32_t*)malloc(tracks[numTracks - 1]->stsz_sample_count*sizeof(int32_t));
 
     for (int i = 0; i < tracks[numTracks - 1]->stsz_sample_count; i++)
-      tracks[numTracks - 1]->stsz_table[i] = read_int32();
+      tracks[numTracks - 1]->stsz_table[i] = readInt32();
     }
 
   return 0;
   }
 //}}}
 //{{{
-int32_t cMp4::read_esds() {
+int32_t cMp4::readEsds() {
 
-  read_char(); /* version */
-  read_int24(); /* flags */
+  readChar(); /* version */
+  readInt24(); /* flags */
 
   /* get and verify ES_DescrTag */
-  auto tag = read_char();
+  auto tag = readChar();
   if (tag == 0x03) {
     /* read length */
-    if (read_mp4_descr_length() < 5 + 15)
+    if (readMp4DescrLength() < 5 + 15)
       return 1;
     /* skip 3 bytes */
-    read_int24();
+    readInt24();
     }
   else
     /* skip 2 bytes */
-    read_int16();
+    readInt16();
 
   // get and verify DecoderConfigDescrTab
-  if (read_char() != 0x04)
+  if (readChar() != 0x04)
     return 1;
 
   // read length
-  auto temp = read_mp4_descr_length();
+  auto temp = readMp4DescrLength();
   if (temp < 13)
     return 1;
 
-  tracks[numTracks - 1]->audioType = read_char();
-  read_int32();//0x15000414 ????
-  tracks[numTracks - 1]->maxBitrate = read_int32();
-  tracks[numTracks - 1]->avgBitrate = read_int32();
+  tracks[numTracks - 1]->audioType = readChar();
+  readInt32();//0x15000414 ????
+  tracks[numTracks - 1]->maxBitrate = readInt32();
+  tracks[numTracks - 1]->avgBitrate = readInt32();
 
   // get and verify DecSpecificInfoTag
-  if (read_char() != 0x05)
+  if (readChar() != 0x05)
     return 1;
 
   // read length
-  tracks[numTracks - 1]->decoderConfigLen = read_mp4_descr_length();
+  tracks[numTracks - 1]->decoderConfigLen = readMp4DescrLength();
 
   if (tracks[numTracks - 1]->decoderConfig)
     free(tracks[numTracks - 1]->decoderConfig);
@@ -1680,50 +1657,50 @@ int32_t cMp4::read_esds() {
   }
 //}}}
 //{{{
-int32_t cMp4::read_stsc() {
+int32_t cMp4::readStsc() {
 
-  read_char(); /* version */
-  read_int24(); /* flags */
+  readChar(); /* version */
+  readInt24(); /* flags */
 
-  tracks[numTracks-1]->stsc_entry_count = read_int32();
+  tracks[numTracks-1]->stsc_entry_count = readInt32();
 
   tracks[numTracks-1]->stsc_first_chunk = (int32_t*)malloc (tracks[numTracks-1]->stsc_entry_count * sizeof (int32_t));
   tracks[numTracks-1]->stsc_samples_per_chunk = (int32_t*)malloc (tracks[numTracks-1]->stsc_entry_count * sizeof (int32_t));
   tracks[numTracks-1]->stsc_sample_desc_index = (int32_t*)malloc (tracks[numTracks-1]->stsc_entry_count * sizeof (int32_t));
 
   for (int i = 0; i < tracks[numTracks-1]->stsc_entry_count; i++) {
-    tracks[numTracks-1]->stsc_first_chunk[i] = read_int32();
-    tracks[numTracks-1]->stsc_samples_per_chunk[i] = read_int32();
-    tracks[numTracks-1]->stsc_sample_desc_index[i] = read_int32();
+    tracks[numTracks-1]->stsc_first_chunk[i] = readInt32();
+    tracks[numTracks-1]->stsc_samples_per_chunk[i] = readInt32();
+    tracks[numTracks-1]->stsc_sample_desc_index[i] = readInt32();
     }
 
   return 0;
   }
 //}}}
 //{{{
-int32_t cMp4::read_stco() {
+int32_t cMp4::readStco() {
 
-  read_char(); /* version */
-  read_int24(); /* flags */
-  tracks[numTracks-1]->stco_entry_count = read_int32();
+  readChar(); /* version */
+  readInt24(); /* flags */
+  tracks[numTracks-1]->stco_entry_count = readInt32();
 
   tracks[numTracks-1]->stco_chunk_offset = (int32_t*)malloc (tracks[numTracks-1]->stco_entry_count * sizeof (int32_t));
 
   for (int i = 0; i < tracks[numTracks-1]->stco_entry_count; i++)
-    tracks[numTracks - 1]->stco_chunk_offset[i] = read_int32();
+    tracks[numTracks - 1]->stco_chunk_offset[i] = readInt32();
 
   return 0;
   }
 //}}}
 //{{{
-int32_t cMp4::read_ctts() {
+int32_t cMp4::readCtts() {
 
   if (tracks[numTracks - 1]->ctts_entry_count)
     return 0;
 
-  read_char(); /* version */
-  read_int24(); /* flags */
-  tracks[numTracks - 1]->ctts_entry_count = read_int32();
+  readChar(); /* version */
+  readInt24(); /* flags */
+  tracks[numTracks - 1]->ctts_entry_count = readInt32();
 
   tracks[numTracks - 1]->ctts_sample_count = (int32_t*)malloc (tracks[numTracks - 1]->ctts_entry_count * sizeof (int32_t));
   tracks[numTracks - 1]->ctts_sample_offset = (int32_t*)malloc (tracks[numTracks - 1]->ctts_entry_count * sizeof (int32_t));
@@ -1742,22 +1719,22 @@ int32_t cMp4::read_ctts() {
     }
   else {
     for (int i = 0; i < tracks[numTracks - 1]->ctts_entry_count; i++) {
-      tracks[numTracks - 1]->ctts_sample_count[i] = read_int32();
-      tracks[numTracks - 1]->ctts_sample_offset[i] = read_int32();
+      tracks[numTracks - 1]->ctts_sample_count[i] = readInt32();
+      tracks[numTracks - 1]->ctts_sample_offset[i] = readInt32();
       }
     return 1;
     }
   }
 //}}}
 //{{{
-int32_t cMp4::read_stts() {
+int32_t cMp4::readStts() {
 
   if (tracks[numTracks - 1]->stts_entry_count)
     return 0;
 
-  read_char(); /* version */
-  read_int24(); /* flags */
-  tracks[numTracks - 1]->stts_entry_count = read_int32();
+  readChar(); /* version */
+  readInt24(); /* flags */
+  tracks[numTracks - 1]->stts_entry_count = readInt32();
   tracks[numTracks - 1]->stts_sample_count = (int32_t*)malloc (tracks[numTracks - 1]->stts_entry_count * sizeof (int32_t));
   tracks[numTracks - 1]->stts_sample_delta = (int32_t*)malloc (tracks[numTracks - 1]->stts_entry_count * sizeof (int32_t));
 
@@ -1775,120 +1752,120 @@ int32_t cMp4::read_stts() {
     }
   else {
     for (int i = 0; i < tracks[numTracks - 1]->stts_entry_count; i++) {
-      tracks[numTracks - 1]->stts_sample_count[i] = read_int32();
-      tracks[numTracks - 1]->stts_sample_delta[i] = read_int32();
+      tracks[numTracks - 1]->stts_sample_count[i] = readInt32();
+      tracks[numTracks - 1]->stts_sample_delta[i] = readInt32();
       }
     return 1;
     }
   }
 //}}}
 //{{{
-int32_t cMp4::read_mvhd() {
+int32_t cMp4::readMvhd() {
 
-  read_char(); /* version */
-  read_int24(); /* flags */
+  readChar(); /* version */
+  readInt24(); /* flags */
 
-  /* creation_time */ read_int32();
-  /* modification_time */ read_int32();
+  /* creation_time */ readInt32();
+  /* modification_time */ readInt32();
 
-  time_scale = read_int32();
-  duration = read_int32();
+  time_scale = readInt32();
+  duration = readInt32();
 
-  /* preferred_rate */ read_int32(); /*read_fixed32();*/
-  /* preferred_volume */ read_int16(); /*read_fixed16();*/
+  /* preferred_rate */ readInt32(); /*read_fixed32();*/
+  /* preferred_volume */ readInt16(); /*read_fixed16();*/
 
   for (int i = 0; i < 10; i++)
-    /* reserved */ read_char();
+    /* reserved */ readChar();
 
   for (int i = 0; i < 9; i++)
-    read_int32(); /* matrix */
+    readInt32(); /* matrix */
 
-  /* preview_time */ read_int32();
-  /* preview_duration */ read_int32();
-  /* poster_time */ read_int32();
-  /* selection_time */ read_int32();
-  /* selection_duration */ read_int32();
-  /* current_time */ read_int32();
-  /* next_track_id */ read_int32();
+  /* preview_time */ readInt32();
+  /* preview_duration */ readInt32();
+  /* poster_time */ readInt32();
+  /* selection_time */ readInt32();
+  /* selection_duration */ readInt32();
+  /* current_time */ readInt32();
+  /* next_track_id */ readInt32();
 
   return 0;
   }
 //}}}
 //{{{
-int32_t cMp4::read_tkhd() {
+int32_t cMp4::readTkhd() {
 
-  auto version = read_char(); /* version */
-  auto flags = read_int24(); /* flags */
+  auto version = readChar(); /* version */
+  auto flags = readInt24(); /* flags */
 
   if (version == 1) {
-    read_int64(); // creation-time
-    read_int64(); // modification-time
-    read_int32(); // track-id
-    read_int32(); // reserved
-    tracks[numTracks - 1]->duration = read_int64();//duration
+    readInt64(); // creation-time
+    readInt64(); // modification-time
+    readInt32(); // track-id
+    readInt32(); // reserved
+    tracks[numTracks - 1]->duration = readInt64();//duration
     }
   else { //version == 0
-    read_int32(); // creation-time
-    read_int32(); // modification-time
-    read_int32(); // track-id
-    read_int32(); // reserved
-    tracks[numTracks - 1]->duration = read_int32();//duration
+    readInt32(); // creation-time
+    readInt32(); // modification-time
+    readInt32(); // track-id
+    readInt32(); // reserved
+    tracks[numTracks - 1]->duration = readInt32();//duration
     if (tracks[numTracks - 1]->duration == 0xFFFFFFFF)
       tracks[numTracks - 1]->duration = 0xFFFFFFFFFFFFFFFF;
     }
 
-  read_int32(); // reserved
-  read_int32(); // reserved
-  read_int16(); // layer
-  read_int16(); // pre-defined
-  read_int16(); // volume
-  read_int16(); // reserved
+  readInt32(); // reserved
+  readInt32(); // reserved
+  readInt16(); // layer
+  readInt16(); // pre-defined
+  readInt16(); // volume
+  readInt16(); // reserved
 
   // matrix
-  read_int32();
-  read_int32();
-  read_int32();
-  read_int32();
-  read_int32();
-  read_int32();
-  read_int32();
-  read_int32();
-  read_int32();
+  readInt32();
+  readInt32();
+  readInt32();
+  readInt32();
+  readInt32();
+  readInt32();
+  readInt32();
+  readInt32();
+  readInt32();
 
-  read_int32(); // width
-  read_int32(); // height
+  readInt32(); // width
+  readInt32(); // height
   return 1;
   }
 //}}}
 //{{{
-int32_t cMp4::read_mdhd() {
+int32_t cMp4::readMdhd() {
 
-  auto version = read_int32();
+  auto version = readInt32();
   if (version == 1) {
-    read_int64();//creation-time
-    read_int64();//modification-time
-    tracks[numTracks - 1]->timeScale = read_int32();//timescale
-    tracks[numTracks - 1]->duration = read_int64();//duration
+    readInt64();//creation-time
+    readInt64();//modification-time
+    tracks[numTracks - 1]->timeScale = readInt32();//timescale
+    tracks[numTracks - 1]->duration = readInt64();//duration
     }
   else { //version == 0
-    read_int32();//creation-time
-    read_int32();//modification-time
-    tracks[numTracks - 1]->timeScale = read_int32();//timescale
-    auto temp = read_int32();
+    readInt32();//creation-time
+    readInt32();//modification-time
+    tracks[numTracks - 1]->timeScale = readInt32();//timescale
+    auto temp = readInt32();
     tracks[numTracks - 1]->duration = (temp == (uint32_t)(-1)) ? (uint64_t)(-1) : (uint64_t)(temp);
     }
 
-  read_int16();
-  read_int16();
+  readInt16();
+  readInt16();
   return 1;
   }
 //}}}
 
 //{{{
-int32_t cMp4::read_meta (uint64_t size, int indent) {
+int32_t cMp4::readMeta (uint64_t size, int indent) {
 
-  read_char(); /* version */
-  read_int24(); /* flags */
+  readChar(); /* version */
+  readInt24(); /* flags */
 
   uint64_t sumsize = 0;
   uint8_t header_size = 0;
@@ -1908,41 +1885,41 @@ int32_t cMp4::read_meta (uint64_t size, int indent) {
   }
 //}}}
 //{{{
-int32_t cMp4::read_mp4a (int indent) {
+int32_t cMp4::readMp4a (int indent) {
 
   for (int i = 0; i < 6; i++)
-    read_char(); /* reserved */
-  /* data_reference_index */ read_int16();
+    readChar(); /* reserved */
+  /* data_reference_index */ readInt16();
 
-  read_int32(); /* reserved */
-  read_int32(); /* reserved */
+  readInt32(); /* reserved */
+  readInt32(); /* reserved */
 
-  tracks[numTracks - 1]->channelCount = read_int16();
-  tracks[numTracks - 1]->sampleSize = read_int16();
+  tracks[numTracks - 1]->channelCount = readInt16();
+  tracks[numTracks - 1]->sampleSize = readInt16();
 
-  read_int16();
-  read_int16();
+  readInt16();
+  readInt16();
 
-  tracks[numTracks - 1]->sampleRate = read_int16();
+  tracks[numTracks - 1]->sampleRate = readInt16();
 
-  read_int16();
+  readInt16();
 
   uint8_t atom_type = 0;
   uint8_t header_size = 0;
   uint64_t size = readAtomHeader (&atom_type, &header_size, indent);
   if (atom_type == ATOM_ESDS)
-    read_esds();
+    readEsds();
 
   return 0;
   }
 //}}}
 //{{{
-int32_t cMp4::read_stsd (int indent) {
+int32_t cMp4::readStsd (int indent) {
 
-  read_char(); /* version */
-  read_int24(); /* flags */
+  readChar(); /* version */
+  readInt24(); /* flags */
 
-  tracks[numTracks - 1]->stsd_entry_count = read_int32();
+  tracks[numTracks - 1]->stsd_entry_count = readInt32();
 
   for (int i = 0; i < tracks[numTracks - 1]->stsd_entry_count; i++) {
     uint64_t skip = getPosition();
@@ -1953,7 +1930,7 @@ int32_t cMp4::read_stsd (int indent) {
 
     if (atom_type == ATOM_MP4A) {
       tracks[numTracks - 1]->type = eTrackAudio;
-      read_mp4a (indent);
+      readMp4a (indent);
       }
     else if (atom_type == ATOM_MP4V)
       tracks[numTracks - 1]->type = eTrackVideo;
@@ -1977,23 +1954,23 @@ int32_t cMp4::parseAtom (int32_t size, uint8_t atom_type, int indent) {
   auto dest_position = getPosition() + size - 8;
 
   if (atom_type == ATOM_STSZ)      // sample size box
-    read_stsz();
+    readStsz();
   else if (atom_type == ATOM_STTS) // time to sample box
-    read_stts();
+    readStts();
   else if (atom_type == ATOM_CTTS) // composition offset box
-    read_ctts();
+    readCtts();
   else if (atom_type == ATOM_STSC) // sample to chunk box
-    read_stsc();
+    readStsc();
   else if (atom_type == ATOM_STCO) // chunk offset box
-    read_stco();
+    readStco();
   else if (atom_type == ATOM_MVHD) // movie header box
-    read_mvhd();
+    readMvhd();
   else if (atom_type == ATOM_MDHD) // track header
-    read_mdhd();
+    readMdhd();
   else if (atom_type == ATOM_STSD) // sample description box
-    read_stsd (indent);
+    readStsd (indent);
   else if (atom_type == ATOM_META) // iTunes Metadata box
-    read_meta (size, indent);
+    readMeta (size, indent);
 
   setPosition (dest_position);
   return 0;
