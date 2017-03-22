@@ -59,7 +59,6 @@ uint8_t* makeAdtsHeader (int frameSize, int header_type, int sbr, int channels, 
 //}}}
 
 int main (int argc, char** argv) {
-
   //{{{  parse args
   bool mLogInfo = false;
 
@@ -74,7 +73,6 @@ int main (int argc, char** argv) {
         break;
       }
   //}}}
-
   auto mp4File = fopen (argv[arg], "rb");
   if (!mp4File) {
     //{{{  error return
@@ -84,7 +82,7 @@ int main (int argc, char** argv) {
     //}}}
 
   cMp4 mp4 (mp4File, true);
-
+  printf ("file timescale:%lld duration:%lld\n", mp4.getTimeScale(), mp4.getDuration());
   //{{{  get metadata
   auto meta_num_items = mp4.meta_get_num_items();
   for (auto metaItem = 0; metaItem < meta_num_items; metaItem++) {

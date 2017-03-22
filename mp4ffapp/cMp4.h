@@ -9,6 +9,8 @@ public:
 
   int32_t getAudioTrack();
   int32_t getVideoTrack();
+  int64_t getDuration() { return mDuration; }
+  int64_t getTimeScale() { return mTimeScale; }
 
   int32_t getTimeScale (int track) { return tracks[track]->timeScale; }
   uint32_t getMaxBitrate (int track) { return tracks[track]->maxBitrate; }
@@ -223,16 +225,16 @@ private:
   // vars
   bool debug = false;
   FILE* file = nullptr;
-  uint64_t file_size = 0;
-  int64_t current_position = 0;
+  uint64_t mFileSize = 0;
+  int64_t mCurrentPosition = 0;
 
   int32_t moov_read = 0;
   uint64_t moov_offset = 0;
   uint64_t moov_size = 0;
   uint8_t last_atom = 0;
 
-  int32_t duration = 0;
-  int32_t time_scale = 0;
+  int32_t mDuration = 0;
+  int32_t mTimeScale = 0;
 
   int32_t numTracks = 0;
   track_t* tracks[MAX_TRACKS];

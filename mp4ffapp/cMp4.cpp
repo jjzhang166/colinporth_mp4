@@ -562,7 +562,7 @@ int32_t cMp4::meta_update (const metadata_t* data) {
     setPosition (moov_offset + 4);
     writeData((uint8_t*)free_data, 4);
 
-    setPosition (file_size);
+    setPosition (mFileSize);
     writeInt32 (new_moov_size + 8);
     writeData((uint8_t*)"moov",4);
     writeData(new_moov_data, new_moov_size);
@@ -584,12 +584,12 @@ int32_t cMp4::meta_update (const metadata_t* data) {
 
 // private
 //{{{  seek, read, write
-int64_t cMp4::getPosition() { return current_position; }
+int64_t cMp4::getPosition() { return mCurrentPosition; }
 //{{{
 int32_t cMp4::setPosition (const uint64_t position) {
 
   fseek (file, (long)position, SEEK_SET);
-  current_position = position;
+  mCurrentPosition = position;
   return 0;
   }
 //}}}
@@ -598,7 +598,7 @@ int32_t cMp4::setPosition (const uint64_t position) {
 uint32_t cMp4::readData (uint8_t* buffer, uint32_t size) {
 
   size_t result = fread (buffer, 1, size, file);
-  current_position += size;
+  mCurrentPosition += size;
   return (uint32_t)result;
   }
 //}}}
@@ -734,7 +734,7 @@ int32_t cMp4::writeData (uint8_t* data, uint32_t size) {
   int32_t result = 1;
   //result = write (file, data, size);
   result = 0;
-  current_position += size;
+  mCurrentPosition += size;
   return result;
   }
 //}}}
@@ -1777,8 +1777,8 @@ int32_t cMp4::readMvhd() {
   /* creation_time */ readInt32();
   /* modification_time */ readInt32();
 
-  time_scale = readInt32();
-  duration = readInt32();
+  mTimeScale = readInt32();
+  mDuration = readInt32();
 
   /* preferred_rate */ readInt32(); /*read_fixed32();*/
   /* preferred_volume */ readInt16(); /*read_fixed16();*/
@@ -2019,7 +2019,7 @@ int32_t cMp4::parseSubAtoms (const uint64_t total_size, int indent) {
 int32_t cMp4::parseAtoms() {
 // parse root atoms
 
-  file_size = 0;
+  mFileSize = 0;
 
   while (true) {
     uint8_t atom_type = 0;
@@ -2027,7 +2027,7 @@ int32_t cMp4::parseAtoms() {
     auto size = readAtomHeader (&atom_type, &header_size, 0);
     if (size == 0)
       break;
-    file_size += size;
+    mFileSize += size;
     last_atom = atom_type;
 
     if ((atom_type == ATOM_MDAT) && moov_read) {
